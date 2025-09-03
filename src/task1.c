@@ -7,6 +7,15 @@
 const char *SEP = ",;";
 const char *SPACE_CHARS = " \r\t";
 
+typedef enum {
+    TABELA_STUDENTI,
+    TABELA_MATERII,
+    TABELA_INROLARI,
+    NONE
+} Table;
+
+
+
 void DIE(int condition, char *error_message)
 {
     if (!condition)
@@ -15,12 +24,13 @@ void DIE(int condition, char *error_message)
     exit(EXIT_FAILURE);
 }
 
-void trim(char* str)
+
+void trim(char** str)
 {
-    while (str && strchr(SPACE_CHARS, str[0]))
-        str++;
-    while (str && strchr(SPACE_CHARS, str[strlen(str) - 1]))
-        str[strlen(str) - 1] = '\0';
+    while (*str && strchr(SPACE_CHARS, *str[0]))
+        (*str)++;
+    while (*str && strchr(SPACE_CHARS, (*str)[strlen(*str) - 1]))
+        (*str)[strlen(*str) - 1] = '\0';
 }
 
 void print_student(student student)
@@ -41,7 +51,7 @@ void print_materie(materie materie)
     printf("[MATERIE]\n");
     printf("Nume materie: \"%s\"\n", materie.nume);
     printf("ID: %d\n", materie.id);
-    printf("Nume titular de curs: %s\n", materie.nume_titular);
+    printf("Nume titular de curs: \"%s\"\n", materie.nume_titular);
     printf("\n");
 }
 
@@ -64,22 +74,22 @@ student parseaza_intrare_student(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     student.id = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     strcpy(student.nume, token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim((token));
+    trim(&token);
     student.an_studiu = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     student.statut = token[0];
 
     return student;
@@ -92,19 +102,19 @@ materie parseaza_intrare_materie(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     materie.id = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
     materie.nume = (char *) malloc(150 * sizeof(char));
-    trim(token);
+    trim(&token);
     strcpy(materie.nume, token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
     materie.nume_titular = (char *) malloc(150 * sizeof(char));
-    trim(token);
+    trim(&token);
     strcpy(materie.nume_titular, token);
 
     return materie;
@@ -118,12 +128,12 @@ inrolare parseaza_intrare_inrolare(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     inrolare.id_student = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(token);
+    trim(&token);
     inrolare.id_materie = atoi(token);
 
     token = strtok(NULL, SPACE_CHARS);
@@ -173,14 +183,28 @@ void adauga_inrolare(secretariat *s, inrolare inrolare)
 }
 
 
-typedef enum {
-    TABELA_STUDENTI,
-    TABELA_MATERII,
-    TABELA_INROLARI,
-    NONE
-} Table;
+void calculeaza_medii_generale(secretariat *s)
+{
+    int idx_inrolare = 0;
 
-secretariat *citeste_secretariat(const char *nume_fisier) {
+    for (int i = 0; i < s->nr_studenti; i++) {
+        float suma_notelor = 0.0;
+        int nr_materii = 0;
+
+        while (s->inrolari[idx_inrolare].id_student == s->studenti[i].id) {
+            suma_notelor +=
+                s->inrolari[idx_inrolare].note[0]
+                + s->inrolari[idx_inrolare].note[1]
+                + s->inrolari[idx_inrolare].note[2];
+            nr_materii++;
+            idx_inrolare++;
+        }
+        s->studenti[i].medie_generala = suma_notelor / (float)nr_materii;
+    }
+}
+
+secretariat *citeste_secretariat(const char *nume_fisier)
+{
     // TODO(student): 1.1
     secretariat *s = malloc(sizeof(secretariat));
     s->nr_studenti = 0;
@@ -246,6 +270,8 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
     }
 
     fclose(fin);
+    calculeaza_medii_generale(s);
+
     return s;
 }
 
