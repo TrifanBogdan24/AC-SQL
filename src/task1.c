@@ -191,7 +191,8 @@ void calculeaza_medii_generale(secretariat *s)
         float suma_notelor = 0.0;
         int nr_materii = 0;
 
-        while (s->inrolari[idx_inrolare].id_student == s->studenti[i].id) {
+        while (idx_inrolare < s->nr_inrolari
+            && s->inrolari[idx_inrolare].id_student == s->studenti[i].id) {
             suma_notelor +=
                 s->inrolari[idx_inrolare].note[0]
                 + s->inrolari[idx_inrolare].note[1]
@@ -199,6 +200,7 @@ void calculeaza_medii_generale(secretariat *s)
             nr_materii++;
             idx_inrolare++;
         }
+
         s->studenti[i].medie_generala = suma_notelor / (float)nr_materii;
     }
 }
