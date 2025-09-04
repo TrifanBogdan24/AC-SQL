@@ -457,11 +457,11 @@ void SELECT(secretariat *secretariat, char *interogare)
         campuri = parseaza_campuri_SELECT(toate_campurile, &nr_campuri);
     }
 
-    int is_filter = 0;
+    int nr_conditii_WHERE = 0;
+    conditie *conditii_WHERE = NULL;
 
     if (ptr_WHERE) {
         /* SELECT ... FROM <tabel> WHERE ...; */
-        is_filter = 1;
 
         int idx_WHERE = ptr_WHERE - interogare;
         buffer_len = idx_WHERE - idx_FROM - strlen(" FROM ");
@@ -479,9 +479,7 @@ void SELECT(secretariat *secretariat, char *interogare)
             interogare + idx_WHERE + strlen(" WHERE "),
             250
         );
-
-        int nr_conditii = 0;
-        conditie *conditii = parseaza_clauza_WHERE(clauza_where, &nr_conditii);
+        conditii_WHERE = parseaza_clauza_WHERE(clauza_where, &nr_conditii_WHERE);
     } else {
         /* SELECT ... FROM <tabel>; */
         buffer_len = strlen(interogare) - idx_FROM - strlen(" FROM ");
@@ -506,6 +504,11 @@ void SELECT(secretariat *secretariat, char *interogare)
         if (!strcmp(nume_tabela, "studenti")) {
             for (int i = 0; i < secretariat->nr_studenti; i++) {
                 student student = secretariat->studenti[i];
+
+                if (nr_conditii_WHERE > 0
+                        && !match_student_on_all_conditii(student, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
+
                 printf("%d %s %d %c %.1f\n",
                     student.id, student.nume, student.an_studiu,
                     student.statut, student.medie_generala);
@@ -513,13 +516,23 @@ void SELECT(secretariat *secretariat, char *interogare)
         } else if (!strcmp(nume_tabela, "materii")) {
             for (int i = 0; i < secretariat->nr_materii; i++) {
                 materie materie = secretariat->materii[i];
+
+                if (nr_conditii_WHERE > 0
+                    && !match_materie_on_all_conditii(materie, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
+
                 printf("%d %s %s\n",
                     materie.id, materie.nume, materie.nume_titular);
             }
         } else if (!strcmp(nume_tabela, "inrolari")) {
             for (int i = 0; i < secretariat->nr_inrolari; i++) {
                 inrolare inrolare = secretariat->inrolari[i];
-                printf("%d %d %.1f %.1f %.1f\n",
+
+                if (nr_conditii_WHERE > 0
+                    && !match_inrolare_on_all_conditii(inrolare, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
+
+                    printf("%d %d %.1f %.1f %.1f\n",
                     inrolare.id_student, inrolare.id_materie,
                     inrolare.note[0], inrolare.note[1], inrolare.note[2]);
             }
@@ -540,6 +553,10 @@ void SELECT(secretariat *secretariat, char *interogare)
             for (int i = 0; i < secretariat->nr_studenti; i++) {
                 student student = secretariat->studenti[i];
 
+                if (nr_conditii_WHERE > 0
+                        && !match_student_on_all_conditii(student, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
+                
                 for (int j = 0; j < nr_campuri; j++) {
                     if (!strcmp(campuri[j], "id"))
                         printf("%d", student.id);
@@ -561,6 +578,10 @@ void SELECT(secretariat *secretariat, char *interogare)
             for (int i = 0; i < secretariat->nr_materii; i++) {
                 materie materie = secretariat->materii[i];
 
+                if (nr_conditii_WHERE > 0
+                        && !match_materie_on_all_conditii(materie, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
+
                 for (int j = 0; j < nr_campuri; j++) {
                     if (!strcmp(campuri[j], "id"))
                         printf("%d", materie.id);
@@ -578,6 +599,10 @@ void SELECT(secretariat *secretariat, char *interogare)
         } else if (!strcmp(nume_tabela, "inrolari")) {
             for (int i = 0; i < secretariat->nr_inrolari; i++) {
                 inrolare inrolare = secretariat->inrolari[i];
+
+                if (nr_conditii_WHERE > 0
+                    && !match_inrolare_on_all_conditii(inrolare, nr_conditii_WHERE, conditii_WHERE))
+                    continue;
 
                 for (int j = 0; j < nr_campuri; j++) {
                     if (!strcmp(campuri[j], "id_student"))
