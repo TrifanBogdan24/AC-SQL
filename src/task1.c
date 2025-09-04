@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "task1.h"
 
@@ -25,12 +26,15 @@ void DIE(int condition, char *error_message)
 }
 
 
-void trim(char** str)
+/* Inlatura (in-place) spatiile de la in inceput si final de string */
+void trim(char *str)
 {
-    while (*str && strchr(SPACE_CHARS, *str[0]))
-        (*str)++;
-    while (*str && strchr(SPACE_CHARS, (*str)[strlen(*str) - 1]))
-        (*str)[strlen(*str) - 1] = '\0';
+    if (!str)
+        return;
+    while (strlen(str) > 0 && isspace(str[0]))
+        strcpy(str, str + 1);
+    while (strlen(str) > 0 && isspace(str[strlen(str) - 1]))
+        str[strlen(str) - 1] = '\0';
 }
 
 void print_student(student student)
@@ -74,22 +78,22 @@ student parseaza_intrare_student(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     student.id = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     strcpy(student.nume, token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     student.an_studiu = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     student.statut = token[0];
 
     return student;
@@ -102,19 +106,19 @@ materie parseaza_intrare_materie(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     materie.id = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
     materie.nume = (char *) malloc(150 * sizeof(char));
-    trim(&token);
+    trim(token);
     strcpy(materie.nume, token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
     materie.nume_titular = (char *) malloc(150 * sizeof(char));
-    trim(&token);
+    trim(token);
     strcpy(materie.nume_titular, token);
 
     return materie;
@@ -128,12 +132,12 @@ inrolare parseaza_intrare_inrolare(char *linie)
 
     char *token = strtok(linie, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     inrolare.id_student = atoi(token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
-    trim(&token);
+    trim(token);
     inrolare.id_materie = atoi(token);
 
     token = strtok(NULL, SPACE_CHARS);
