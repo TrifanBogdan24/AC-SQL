@@ -1,6 +1,14 @@
 #include "task2.h"
 #include "trim.h"
 
+
+typedef struct {
+    char *camp;
+    char *op_comp;
+    char *valoare;
+} conditie;
+
+
 /*
  Parseaza campurile din clauza SELECT si intoarce un array de string-uri
  
@@ -18,6 +26,7 @@ char **parseaza_campuri_SELECT(char *toate_campurile, int *nr_campuri)
     (*nr_campuri) = 0;
 
     while (token) {
+        printf("%s\n", token);
         (*nr_campuri)++;
         int idx = (*nr_campuri) - 1;
         campuri = realloc(campuri, *nr_campuri * sizeof(char*));
@@ -25,10 +34,12 @@ char **parseaza_campuri_SELECT(char *toate_campurile, int *nr_campuri)
         strcpy(campuri[idx], token);
         trim(campuri[idx]);
         token = strtok(NULL, ",");
+        printf("%s\n", campuri[idx]);
     }
 
     return campuri;
 }
+
 
 
 /*
@@ -89,11 +100,6 @@ int is_valid_field(char *nume_tabela, char *camp)
 }
 
 
-typedef struct {
-    char *camp;
-    char *op_comp;
-    char *valoare;
-} conditie;
 
 
 
@@ -408,6 +414,152 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conds, conditie *co
 }
 
 
+void SELECT_FROM_studenti(secretariat *secretariat,
+    int nr_campuri, char **campuri, 
+    int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < secretariat->nr_studenti; i++) {
+        student student = secretariat->studenti[i];
+
+        if (nr_conds > 0
+                && !match_student_on_all_conditii(student, nr_conds, conds))
+            continue;
+        
+        for (int j = 0; j < nr_campuri; j++) {
+            if (!strcmp(campuri[j], "id"))
+                printf("%d", student.id);
+            if (!strcmp(campuri[j], "nume"))
+                printf("%s", student.nume);
+            if (!strcmp(campuri[j], "an_studiu"))
+                printf("%d", student.an_studiu);
+            if (!strcmp(campuri[j], "statut"))
+                printf("%c", student.statut);
+            if (!strcmp(campuri[j], "medie_generala"))
+                printf("%.1f", student.medie_generala);
+
+            if (j < nr_campuri - 1)
+                printf(" ");
+        }
+        printf("\n");
+    }
+}
+
+void SELECT_FROM_materii(secretariat *secretariat,
+    int nr_campuri, char **campuri, 
+    int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < secretariat->nr_materii; i++) {
+        materie materie = secretariat->materii[i];
+
+        if (nr_conds > 0
+                && !match_materie_on_all_conditii(materie, nr_conds, conds))
+            continue;
+
+        for (int j = 0; j < nr_campuri; j++) {
+            if (!strcmp(campuri[j], "id"))
+                printf("%d", materie.id);
+            if (!strcmp(campuri[j], "nume"))
+                printf("%s", materie.nume);
+            if (!strcmp(campuri[j], "nume_titular"))
+                printf("%s", materie.nume_titular);
+            
+            if (j < nr_campuri - 1)
+                printf(" ");
+        }
+        printf("\n");
+
+    }
+}
+
+
+void SELECT_FROM_inrolari(secretariat *secretariat,
+    int nr_campuri, char **campuri, 
+    int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < secretariat->nr_inrolari; i++) {
+        inrolare inrolare = secretariat->inrolari[i];
+
+        if (nr_conds > 0
+            && !match_inrolare_on_all_conditii(inrolare, nr_conds, conds))
+            continue;
+
+        for (int j = 0; j < nr_campuri; j++) {
+            if (!strcmp(campuri[j], "id_student"))
+                printf("%d", inrolare.id_student);
+            if (!strcmp(campuri[j], "id_materie"))
+                printf("%d", inrolare.id_materie);
+            if (!strcmp(campuri[j], "note"))
+                printf("%1.f %1.f %1.f",
+                    inrolare.note[0], inrolare.note[1], inrolare.note[2]);
+
+            if (j < nr_campuri - 1)
+                printf(" ");
+        }
+        printf("\n");
+    }
+}
+
+
+char **allocate_campuri(int nr_campuri)
+{
+    char **campuri = (char **) malloc(nr_campuri * sizeof(char));
+    for (int i = 0; i < nr_campuri; i++)
+        campuri[i] = (char *) malloc(30 * sizeof(char));
+    return campuri;
+}
+
+char **build_campuri_STUDENTI(int *nr_campuri)
+{
+    (*nr_campuri) = 5;
+
+    char **campuri = allocate_campuri(*nr_campuri);
+    strcpy(campuri[0], "id");
+    strcpy(campuri[1], "nume");
+    strcpy(campuri[2], "an_studiu");
+    strcpy(campuri[3], "statut");
+    strcpy(campuri[4], "medie_generala");
+    return campuri;
+}
+
+char **build_campuri_METERIE(int *nr_campuri)
+{
+    (*nr_campuri) = 3;
+
+    char **campuri = allocate_campuri(*nr_campuri);
+    strcpy(campuri[0], "id");
+    strcpy(campuri[1], "nume");
+    strcpy(campuri[2], "nume_titular");
+    return campuri;
+}
+
+
+char **build_campuri_INROLARE(int *nr_campuri)
+{
+    (*nr_campuri) = 3;
+
+    char **campuri = allocate_campuri(*nr_campuri);
+    strcpy(campuri[0], "id_student");
+    strcpy(campuri[1], "id_materie");
+    strcpy(campuri[2], "note");
+    return campuri;
+}
+
+
+char **build_campuri(char *nume_tabela, int *nr_campuri)
+{
+    if (!strcmp(nume_tabela, "studenti")) {
+        return build_campuri_STUDENTI(nr_campuri);
+    } else if (!strcmp(nume_tabela, "materii")) {
+        return build_campuri_METERIE(nr_campuri);
+    } else if (!strcmp(nume_tabela, "inrolari")) {
+        return build_campuri_INROLARE(nr_campuri);
+    }
+
+    fprintf(stderr, "[EROARE] Nume invalid de tabela \"%s\"", nume_tabela);
+    return NULL;
+}
+
+
 /* Template:
 SELECT <campuri> FROM <tabel> WHERE <camp> <comp> <valoare>;
 SELECT <campuri> FROM <tabel>;
@@ -455,10 +607,14 @@ void SELECT(secretariat *secretariat, char *interogare)
     if (!is_select_all) {
         // NU se foloseste globbing-ul "*"
         campuri = parseaza_campuri_SELECT(toate_campurile, &nr_campuri);
+    } else {
+        // Se foloseste globbing-ul "*"
+        campuri = build_campuri(nume_tabela, &nr_campuri);
     }
 
-    int nr_conditii_WHERE = 0;
-    conditie *conditii_WHERE = NULL;
+    // Conditii din clauza WHERE:
+    int nr_conds = 0;
+    conditie *conds = NULL;
 
     if (ptr_WHERE) {
         /* SELECT ... FROM <tabel> WHERE ...; */
@@ -473,13 +629,13 @@ void SELECT(secretariat *secretariat, char *interogare)
 
         /* WHERE <camp> <comp> <valoare>; */
         /* WHERE <conditie1> AND <conditie2> AND ... AND <conditieN>; */
-        char *clauza_where = (char *) malloc(250 * sizeof(char));
+        char *clauza_WHERE = (char *) malloc(250 * sizeof(char));
         strncpy(
-            clauza_where,
+            clauza_WHERE,
             interogare + idx_WHERE + strlen(" WHERE "),
             250
         );
-        conditii_WHERE = parseaza_clauza_WHERE(clauza_where, &nr_conditii_WHERE);
+        conds = parseaza_clauza_WHERE(clauza_WHERE, &nr_conds);
     } else {
         /* SELECT ... FROM <tabel>; */
         buffer_len = strlen(interogare) - idx_FROM - strlen(" FROM ");
@@ -498,129 +654,33 @@ void SELECT(secretariat *secretariat, char *interogare)
     }
 
 
-    if (is_select_all) {
-        // Se foloseste globbing-ul "*"
-
-        if (!strcmp(nume_tabela, "studenti")) {
-            for (int i = 0; i < secretariat->nr_studenti; i++) {
-                student student = secretariat->studenti[i];
-
-                if (nr_conditii_WHERE > 0
-                        && !match_student_on_all_conditii(student, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-
-                printf("%d %s %d %c %.1f\n",
-                    student.id, student.nume, student.an_studiu,
-                    student.statut, student.medie_generala);
-            }
-        } else if (!strcmp(nume_tabela, "materii")) {
-            for (int i = 0; i < secretariat->nr_materii; i++) {
-                materie materie = secretariat->materii[i];
-
-                if (nr_conditii_WHERE > 0
-                    && !match_materie_on_all_conditii(materie, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-
-                printf("%d %s %s\n",
-                    materie.id, materie.nume, materie.nume_titular);
-            }
-        } else if (!strcmp(nume_tabela, "inrolari")) {
-            for (int i = 0; i < secretariat->nr_inrolari; i++) {
-                inrolare inrolare = secretariat->inrolari[i];
-
-                if (nr_conditii_WHERE > 0
-                    && !match_inrolare_on_all_conditii(inrolare, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-
-                    printf("%d %d %.1f %.1f %.1f\n",
-                    inrolare.id_student, inrolare.id_materie,
-                    inrolare.note[0], inrolare.note[1], inrolare.note[2]);
-            }
-        }
-    } else {
-        // Se interogheaza dupa nume de coloana:
-        
-        ret_val = 0;
-        for (int i = 0; i < nr_campuri; i++) {
-            if (!is_valid_field(nume_tabela, campuri[i]))
-                ret_val = -1;  // Campuri invalide
-        }
-
-        if (ret_val)
-            return;   // Campuri invalide
-
-        if (!strcmp(nume_tabela, "studenti")) {
-            for (int i = 0; i < secretariat->nr_studenti; i++) {
-                student student = secretariat->studenti[i];
-
-                if (nr_conditii_WHERE > 0
-                        && !match_student_on_all_conditii(student, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-                
-                for (int j = 0; j < nr_campuri; j++) {
-                    if (!strcmp(campuri[j], "id"))
-                        printf("%d", student.id);
-                    if (!strcmp(campuri[j], "nume"))
-                        printf("%s", student.nume);
-                    if (!strcmp(campuri[j], "an_studiu"))
-                        printf("%d", student.an_studiu);
-                    if (!strcmp(campuri[j], "statut"))
-                        printf("%c", student.statut);
-                    if (!strcmp(campuri[j], "medie_generala"))
-                        printf("%.1f", student.medie_generala);
-
-                    if (j < nr_campuri - 1)
-                        printf(" ");
-                }
-                printf("\n");
-            }
-        } else if (!strcmp(nume_tabela, "materii")) {
-            for (int i = 0; i < secretariat->nr_materii; i++) {
-                materie materie = secretariat->materii[i];
-
-                if (nr_conditii_WHERE > 0
-                        && !match_materie_on_all_conditii(materie, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-
-                for (int j = 0; j < nr_campuri; j++) {
-                    if (!strcmp(campuri[j], "id"))
-                        printf("%d", materie.id);
-                    if (!strcmp(campuri[j], "nume"))
-                        printf("%s", materie.nume);
-                    if (!strcmp(campuri[j], "nume_titular"))
-                        printf("%s", materie.nume_titular);
-                    
-                    if (j < nr_campuri - 1)
-                        printf(" ");
-                }
-                printf("\n");
-
-            }
-        } else if (!strcmp(nume_tabela, "inrolari")) {
-            for (int i = 0; i < secretariat->nr_inrolari; i++) {
-                inrolare inrolare = secretariat->inrolari[i];
-
-                if (nr_conditii_WHERE > 0
-                    && !match_inrolare_on_all_conditii(inrolare, nr_conditii_WHERE, conditii_WHERE))
-                    continue;
-
-                for (int j = 0; j < nr_campuri; j++) {
-                    if (!strcmp(campuri[j], "id_student"))
-                        printf("%d", inrolare.id_student);
-                    if (!strcmp(campuri[j], "id_materie"))
-                        printf("%d", inrolare.id_materie);
-                    if (!strcmp(campuri[j], "note"))
-                        printf("%1.f %1.f %1.f",
-                            inrolare.note[0], inrolare.note[1], inrolare.note[2]);
-
-                    if (j < nr_campuri - 1)
-                        printf(" ");
-                }
-                printf("\n");
-            }
-        }
+    ret_val = 0;
+    for (int i = 0; i < nr_campuri; i++) {
+        printf("camp[%d] = \"%s\"\n", i, campuri[i]);
+        if (!is_valid_field(nume_tabela, campuri[i]))
+            ret_val = -1;  // Campuri invalide
     }
 
+    if (ret_val)
+        return;   // Campuri invalide
+
+
+    if (!strcmp(nume_tabela, "studenti")) {
+        SELECT_FROM_studenti(
+            secretariat,
+            nr_campuri, campuri, 
+            nr_conds, conds);
+    } else if (!strcmp(nume_tabela, "materii")) {
+        SELECT_FROM_materii(
+            secretariat,
+            nr_campuri, campuri, 
+            nr_conds, conds);
+    } else if (!strcmp(nume_tabela, "inrolari")) {
+        SELECT_FROM_inrolari(
+            secretariat,
+            nr_campuri, campuri, 
+            nr_conds, conds);
+    }
 }
 
 void proceseaza_interogare(secretariat *secretariat, char *interogare)
@@ -644,9 +704,9 @@ void proceseaza_interogare(secretariat *secretariat, char *interogare)
     if (strstr(interogare, "SELECT ")) {
         SELECT(secretariat, interogare);
     } else if (strstr(interogare, "UPDATE ")) {
-
+        // TODO
     } else if (strstr(interogare, "DELETE ")) {
-
+        // TODO
     } else {
         fprintf(stderr, "[EROARE] Interogare invalida!\n");
     }
