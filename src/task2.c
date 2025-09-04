@@ -1,41 +1,57 @@
 #include "task2.h"
 #include "trim.h"
 
-/* Intoarce 0 daca nu sunt probleme si -1 in cazul in care exista campuri invalida */
-int imparte_campuri_SELECT(char *toate_campurile, int *nr_campuri, char ***campuri)
+/*
+ Parseaza campurile din clauza SELECT si intoarce un array de string-uri
+ 
+ Exemplu:
+ if (toate_campurile == "nume") return ["nume"]
+ if (toate_campurile == "nume, medie_generala") return ["nume", "medie_generala"]
+
+ ATENTIE! Functia nu poate parsa caracterul "*" de globbing
+*/
+char **parseaza_campuri_SELECT(char *toate_campurile, int *nr_campuri)
 {
+    char **campuri = NULL;
     char *token = strtok(toate_campurile, ",");
+
+    (*nr_campuri) = 0;
 
     while (token) {
         (*nr_campuri)++;
-        (*campuri) = (char **) realloc(*campuri, *nr_campuri * sizeof(char*));
-        (*campuri)[*nr_campuri - 1] = malloc(150 * sizeof(char));
-        strcpy((*campuri)[*nr_campuri - 1], token);
-        trim((*campuri)[*nr_campuri - 1]);
+        int idx = (*nr_campuri) - 1;
+        campuri = realloc(campuri, *nr_campuri * sizeof(char*));
+        campuri[idx] = malloc(150 * sizeof(char));
+        strcpy(campuri[idx], token);
+        trim(campuri[idx]);
         token = strtok(NULL, ",");
     }
 
-    return 0;
+    return campuri;
 }
 
 
 /*
- * Daca tabela nu exista in baza de date, atunci intoarce -1 si scrie un text de eroare
- * altfel intoarce 0
+ * Daca tabela exista in baza de date, atunci intoarce 1 (TRUE)
+ * Altfel, scrie un text de eroare si intoarce 0 (FALSE)
 */
-int is_valid_table(char *nume_tabela)
+int is_valid_table(const char *nume_tabela)
 {
     if (strcmp(nume_tabela, "studenti")
         && strcmp(nume_tabela, "materii")
         && strcmp(nume_tabela, "inrolari")) {
         fprintf(stderr, "[EROARE] Tabela \"%s\" nu exista in baza de date a secretariatului!\n",
             nume_tabela);
-        return -1;
+        return 0;
     }
 
-    return 0;
+    return 1;
 }
 
+/*
+ * Daca tabela contine o coloana cu numele campului, atunci intoarce 1 (TRUE)
+ * Altfel, return 0 (FALSE)
+*/
 int is_valid_field(char *nume_tabela, char *camp)
 {
     for (size_t i = 0; i < strlen(camp); i++) {
@@ -43,40 +59,357 @@ int is_valid_field(char *nume_tabela, char *camp)
             continue;
         fprintf(stderr, "[EROARE] Camp invalid \"%s\"\n", camp);
         printf("[INFO] Campurile NU pot fi separate prin spatii!\n");
-        return -1;
+        return 0;
     }
 
     int err_flag = 0;
     if (!strcmp(nume_tabela, "studenti")
         && strcmp(camp, "id") && strcmp(camp, "nume")  && strcmp(camp, "an_studiu")
         && strcmp(camp, "status") && strcmp(camp, "medie_generala")) {
-        err_flag = -1;
+        err_flag = 0;
     }
 
     if (!strcmp(nume_tabela, "materii")
         && strcmp(camp, "id") && strcmp(camp, "nume") && strcmp(camp, "nume_titular")) {
-        err_flag = -1;
+        err_flag = 0;
     }
 
     if (!strcmp(nume_tabela, "inrolari")
         && strcmp(camp, "id_student") && strcmp(camp, "id_materie") && strcmp(camp, "note")) {
-        err_flag = -1;
+        err_flag = 0;
     }
 
 
     if (err_flag) {
         fprintf(stderr, "[EROARE] Tabela \"%s\" nu contine campul \"%s\"\n", nume_tabela, camp);
-        return -1;
+        return 0;
     }
 
-    return 0;
+    return 1;
 }
 
 
+typedef struct {
+    char *camp;
+    char *op_comp;
+    char *valoare;
+} conditie;
+
+
+
+
+/*
+ Imparte conditiile in mai multe siruri.
+
+ Exemplu:
+ if (clauza_where == "id = 0") return ["id = 0"]
+ if (clauza_where == "id = 0 AND nume = USO") return ["id = 0", "nume = USO"]
+
+ ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
+          Acel caracter trebuie sters inaine de a apela functia!
+*/
+char **get_conditii_strings_clauza_WHERE(char *clauza_where, int *nr_conditii)
+{
+    char **conditii = NULL;
+    *nr_conditii = 0;
+    
+    const char *delim = "AND";
+    size_t len_delim = strlen(delim);
+    char *ptr = clauza_where;
+    char *found = strstr(ptr, delim);  // prima căutare
+
+    while (found) {
+        *found = '\0';
+
+        (*nr_conditii)++;
+        conditii = realloc(conditii, *nr_conditii * sizeof(char*));
+        int idx = (*nr_conditii) - 1;
+        conditii[idx] = malloc(250 * sizeof(char));
+        strcpy(conditii[idx], ptr);
+
+        ptr = found + len_delim;
+        found = strstr(ptr, delim);
+    }
+
+    // Ultima bucata (dupa ultimul "AND" sau intregul sir daca nu exista "AND")
+    if (*ptr != '\0') {
+        (*nr_conditii)++;
+        conditii = realloc(conditii, *nr_conditii * sizeof(char*));
+        int idx = (*nr_conditii) - 1;
+        conditii[idx] = malloc(250 * sizeof(char));
+        strcpy(conditii[idx], ptr);
+    }
+    
+    return conditii;
+}
+
+/*
+ Parseaza clauza WHERE si returneaza un array de conditii, plasate in struct-uri
+
+ if (clauza_where == "id = 0") return [
+    conditie(camp="id", op_comp="=", valoare="0")
+    ]
+ if (clauza_where == "id = 0 AND nume != USO") return [
+    conditie(camp="id", op_comp="=", valoare="0"),
+    conditie(camp="nume", op_comp="!=", valoare="USO"),
+    ]
+
+ ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
+          Acel caracter trebuie sters inaine de a apela functia!
+*/
+conditie *parseaza_clauza_WHERE(char *clauza_where, int *nr_conditii)
+{
+    (*nr_conditii) = 0;
+    char **str_conditii = get_conditii_strings_clauza_WHERE(clauza_where, nr_conditii);
+
+    conditie *conditii = (conditie *) malloc((*nr_conditii) * sizeof(conditie));
+
+    for (int i = 0; i < *nr_conditii; i++) {
+        // <camp> <operator> <valoare>
+        conditie *conditie = &conditii[i];
+        conditie->camp = (char *) malloc(150 * sizeof(char));
+        conditie->op_comp = (char *) malloc(150 * sizeof(char));
+        conditie->valoare = (char *) malloc(150 * sizeof(char));
+
+        char *token = strtok(str_conditii[i], " ");
+        strcpy(conditie->camp, token);
+        trim(conditie->camp);
+
+        token = strtok(NULL, " ");
+        strcpy(conditie->op_comp, token);
+        trim(conditie->op_comp);
+
+        token = strtok(NULL, " ");
+        strcpy(conditie->valoare, token);
+        trim(conditie->valoare);
+    }
+
+    return conditii;
+}
+
+/*
+ * Returneaza 1 (TRUE) daca STUDENTUL respecta conditia,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_student_on_conditie(student student, conditie cond)
+{
+    if (!strcmp(cond.camp, "id")) {
+        int id = atoi(cond.valoare);
+
+        if (!strcmp(cond.op_comp, "="))
+            return student.id == id;
+        if (!strcmp(cond.op_comp, "!="))
+            return student.id != id;
+        if (!strcmp(cond.op_comp, "<"))
+            return student.id < id;
+        if (!strcmp(cond.op_comp, ">"))
+            return student.id > id;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "nume")) {
+        char *nume = cond.valoare;
+        
+        if (!strcmp(cond.op_comp, "="))
+            return strcmp(student.nume, nume) == 0;
+        if (!strcmp(cond.op_comp, "!="))
+            return strcmp(student.nume, nume) != 0;
+        if (!strcmp(cond.op_comp, "<"))
+            return strcmp(student.nume, nume) < 0;
+        if (!strcmp(cond.op_comp, ">"))
+            return strcmp(student.nume, nume) > 0;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "an_studiu")) {
+        int an = atoi(cond.valoare);
+
+        if (!strcmp(cond.op_comp, "="))
+            return student.an_studiu == an;
+        if (!strcmp(cond.op_comp, "!="))
+            return student.an_studiu != an;
+        if (!strcmp(cond.op_comp, "<"))
+            return student.an_studiu < an;
+        if (!strcmp(cond.op_comp, ">"))
+            return student.an_studiu > an;
+
+        return 0;   // Conditie WHERE invalida
+    
+    } else if (!strcmp(cond.camp, "statut")) {
+        char statut = cond.valoare[0];
+
+        if (!strcmp(cond.op_comp, "="))
+            return student.statut == statut;
+        if (!strcmp(cond.op_comp, "!="))
+            return student.statut != statut;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "medie_generala")) {
+        float medie_generala = atof(cond.valoare);
+
+        if (!strcmp(cond.op_comp, "="))
+            return student.medie_generala == medie_generala;
+        if (!strcmp(cond.op_comp, "!="))
+            return student.medie_generala != medie_generala;
+        if (!strcmp(cond.op_comp, "<"))
+            return student.medie_generala < medie_generala;
+        if (!strcmp(cond.op_comp, ">"))
+            return student.medie_generala > medie_generala;
+
+        return 0;   // Conditie WHERE invalida
+    }
+
+    return 0;   // Conditie WHERE invalida
+}
+
+
+/*
+ * Returneaza 1 (TRUE) daca MATERIA respecta conditia,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_materie_on_conditie(materie materie, conditie cond)
+{
+    if (!strcmp(cond.camp, "id")) {
+        int id = atoi(cond.valoare);
+
+        if (!strcmp(cond.op_comp, "="))
+            return materie.id == id;
+        if (!strcmp(cond.op_comp, "!="))
+            return materie.id != id;
+        if (!strcmp(cond.op_comp, "<"))
+            return materie.id < id;
+        if (!strcmp(cond.op_comp, ">"))
+            return materie.id > id;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "nume")) {
+        char *nume = cond.valoare;
+        
+        if (!strcmp(cond.op_comp, "="))
+            return strcmp(materie.nume, nume) == 0;
+        if (!strcmp(cond.op_comp, "!="))
+            return strcmp(materie.nume, nume) != 0;
+        if (!strcmp(cond.op_comp, "<"))
+            return strcmp(materie.nume, nume) < 0;
+        if (!strcmp(cond.op_comp, ">"))
+            return strcmp(materie.nume, nume) > 0;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "nume_titular")) {
+        char *nume_titular = cond.valoare;
+        
+        if (!strcmp(cond.op_comp, "="))
+            return strcmp(materie.nume_titular, nume_titular) == 0;
+        if (!strcmp(cond.op_comp, "!="))
+            return strcmp(materie.nume_titular, nume_titular) != 0;
+        if (!strcmp(cond.op_comp, "<"))
+            return strcmp(materie.nume_titular, nume_titular) < 0;
+        if (!strcmp(cond.op_comp, ">"))
+            return strcmp(materie.nume_titular, nume_titular) > 0;
+
+        return 0;   // Conditie WHERE invalida
+    }
+
+
+    return 0;   // Conditie WHERE invalida
+}
+
+/*
+ * Returneaza 1 (TRUE) daca INROLAREA respecta conditia,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
+{
+    if (!strcmp(cond.camp, "id_student")) {
+        int id_student = atoi(cond.valoare);
+        
+        if (!strcmp(cond.op_comp, "="))
+            return inrolare.id_student == id_student;
+        if (!strcmp(cond.op_comp, "!="))
+            return inrolare.id_student != id_student;
+        if (!strcmp(cond.op_comp, "<"))
+            return inrolare.id_student < id_student;
+        if (!strcmp(cond.op_comp, ">"))
+            return inrolare.id_student > id_student;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "id_materie")) {
+        int id_materie = atoi(cond.valoare);
+        
+        if (!strcmp(cond.op_comp, "="))
+            return inrolare.id_materie == id_materie;
+        if (!strcmp(cond.op_comp, "!="))
+            return inrolare.id_materie != id_materie;
+        if (!strcmp(cond.op_comp, "<"))
+            return inrolare.id_materie < id_materie;
+        if (!strcmp(cond.op_comp, ">"))
+            return inrolare.id_materie > id_materie;
+
+        return 0;   // Conditie WHERE invalida
+    } else if (!strcmp(cond.camp, "note")) {
+        char *token = strtok(cond.valoare, " ");
+        float nota_laborator = atof(token);
+
+        token = strtok(NULL, " ");
+        float nota_partial = atof(token);
+
+        token = strtok(NULL, " ");
+        float nota_final = atof(token);
+
+        if (!strcmp(cond.op_comp, "="))
+            return (nota_laborator == inrolare.note[0]
+            && nota_partial == inrolare.note[1]
+            && nota_final == inrolare.note[2]);
+        else if (!strcmp(cond.op_comp, "="))
+            return (nota_laborator != inrolare.note[0]
+            || nota_partial != inrolare.note[1]
+            || nota_final != inrolare.note[2]);
+
+        return 0;   // Conditie WHERE invalida
+    }
+
+    return 0;   // Conditie WHERE invalida
+}
+
+/*
+ * Returneaza 1 (TRUE) daca STUDENTUL respecta TOATE conditiile,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_student_on_all_conditii(student student, int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < nr_conds; i++)
+        if (!match_student_on_conditie(student, conds[i]))
+            return 0;
+    return 1;
+}
+
+
+/*
+ * Returneaza 1 (TRUE) daca MATERIA respecta TOATE conditiile,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_materie_on_all_conditii(materie materie, int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < nr_conds; i++)
+        if (!match_materie_on_conditie(materie, conds[i]))
+            return 0;
+    return 1;
+}
+
+
+/*
+ * Returneaza 1 (TRUE) daca INROLARE respecta TOATE conditiile,
+ * Altfel, intoarce 0 (FALSE)
+*/
+int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conds, conditie *conds)
+{
+    for (int i = 0; i < nr_conds; i++)
+        if (!match_inrolare_on_conditie(inrolare, conds[i]))
+            return 0;
+    return 1;
+}
 
 
 /* Template:
-SELECT <campuri> FROM <tabel> WHERE <camp> <operator> <valoare>;
+SELECT <campuri> FROM <tabel> WHERE <camp> <comp> <valoare>;
 SELECT <campuri> FROM <tabel>;
 */
 void SELECT(secretariat *secretariat, char *interogare)
@@ -107,26 +440,29 @@ void SELECT(secretariat *secretariat, char *interogare)
     buffer_len = idx_FROM - idx_SELECT - strlen("SELECT ");
     strncpy(
         toate_campurile,
-        interogare +  idx_SELECT + strlen("SELECT "),
+        interogare + idx_SELECT + strlen("SELECT "),
         buffer_len);
     toate_campurile[buffer_len] = '\0';
     trim(toate_campurile);
 
     // Are valoarea '1' in caz de "SELECT *" si '0' atunci cand "SELECT <campuri>"
     int is_select_all =
-        (strlen(toate_campurile) == 1 && toate_campurile[0] == '*');
+        (strcmp(toate_campurile, "*") == 0);
 
     int nr_campuri = 0;
     char **campuri = NULL;
 
     if (!is_select_all) {
         // NU se foloseste globbing-ul "*"
-        if (imparte_campuri_SELECT(toate_campurile, &nr_campuri, &campuri))
-            return;  // Campuri invalide
+        campuri = parseaza_campuri_SELECT(toate_campurile, &nr_campuri);
     }
+
+    int is_filter = 0;
 
     if (ptr_WHERE) {
         /* SELECT ... FROM <tabel> WHERE ...; */
+        is_filter = 1;
+
         int idx_WHERE = ptr_WHERE - interogare;
         buffer_len = idx_WHERE - idx_FROM - strlen(" FROM ");
         strncpy(
@@ -134,9 +470,21 @@ void SELECT(secretariat *secretariat, char *interogare)
             interogare + idx_FROM + strlen(" FROM "),
             buffer_len);
         nume_tabela[buffer_len] = '\0';
+
+        /* WHERE <camp> <comp> <valoare>; */
+        /* WHERE <conditie1> AND <conditie2> AND ... AND <conditieN>; */
+        char *clauza_where = (char *) malloc(250 * sizeof(char));
+        strncpy(
+            clauza_where,
+            interogare + idx_WHERE + strlen(" WHERE "),
+            250
+        );
+
+        int nr_conditii = 0;
+        conditie *conditii = parseaza_clauza_WHERE(clauza_where, &nr_conditii);
     } else {
         /* SELECT ... FROM <tabel>; */
-        buffer_len = strlen(interogare) - strlen(";") - idx_FROM - strlen(" FROM ");
+        buffer_len = strlen(interogare) - idx_FROM - strlen(" FROM ");
         strncpy(
             nume_tabela,
             interogare + idx_FROM + strlen(" FROM "),
@@ -147,10 +495,9 @@ void SELECT(secretariat *secretariat, char *interogare)
 
     trim(nume_tabela);
 
-    if (is_valid_table(nume_tabela)) {
+    if (!is_valid_table(nume_tabela)) {
         return;
     }
-
 
 
     if (is_select_all) {
@@ -182,7 +529,7 @@ void SELECT(secretariat *secretariat, char *interogare)
         
         ret_val = 0;
         for (int i = 0; i < nr_campuri; i++) {
-            if (is_valid_field(nume_tabela, campuri[i]))
+            if (!is_valid_field(nume_tabela, campuri[i]))
                 ret_val = -1;  // Campuri invalide
         }
 
@@ -264,6 +611,10 @@ void proceseaza_interogare(secretariat *secretariat, char *interogare)
         fprintf(stderr, "[EROARE] Lipseste ';' la final de interogare!\n");
         return;
     }
+
+    // Sterge caracterul punct-si-virgula ';' din textul interogarii
+    interogare[strlen(interogare) - 1] = '\0';
+
 
     if (strstr(interogare, "SELECT ")) {
         SELECT(secretariat, interogare);
