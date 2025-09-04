@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "task1.h"
+#include "trim.h"
 
 const char *SEP = ",;";
 const char *SPACE_CHARS = " \r\t";
@@ -26,16 +26,6 @@ void DIE(int condition, char *error_message)
 }
 
 
-/* Inlatura (in-place) spatiile de la in inceput si final de string */
-void trim(char *str)
-{
-    if (!str)
-        return;
-    while (strlen(str) > 0 && isspace(str[0]))
-        strcpy(str, str + 1);
-    while (strlen(str) > 0 && isspace(str[strlen(str) - 1]))
-        str[strlen(str) - 1] = '\0';
-}
 
 void print_student(student student)
 {
