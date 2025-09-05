@@ -6,9 +6,9 @@
 #include "trim.h"
 
 #define BUFFER_LENGTH 256
+#define SEP         ",;"
+#define SPACE_CHARS " \r\t"
 
-const char *SEP = ",;";
-const char *SPACE_CHARS = " \r\t";
 
 typedef enum {
     TABELA_STUDENTI,
@@ -16,7 +16,6 @@ typedef enum {
     TABELA_INROLARI,
     NONE
 } Table;
-
 
 
 void DIE(int condition, char *error_message) {
@@ -34,7 +33,7 @@ void print_student(student student) {
     printf("ID: %d\n", student.id);
     printf("An studiu: %d\n", student.an_studiu);
     printf("Statut: %c (\"%s\")\n",
-        student.statut, 
+        student.statut,
         (student.statut == 'b') ? "buget" : "taxa");
     printf("Medie generala: %.2f\n", student.medie_generala);
     printf("\n");
@@ -237,19 +236,19 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
                     stud.id, stud.nume, stud.an_studiu,
                     stud.statut, stud.medie_generala);
                 break;
-            
+
             case TABELA_MATERII:
                 materie materie = parseaza_intrare_materie(linie);
                 /* Pentru debugging: print_materie(materie); */
                 adauga_materie(s, materie);
                 break;
-            
+
             case TABELA_INROLARI:
                 inrolare inrolare = parseaza_intrare_inrolare(linie);
                 /* Pentru debugging: print_inrolare(inrolare); */
                 adauga_inrolare(s, inrolare);
                 break;
-            
+
             default:
                 break;
             }

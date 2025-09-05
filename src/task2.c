@@ -4,6 +4,9 @@
 #include "trim.h"
 
 #define BUFFER_LENGTH 256
+#define NR_CAMPURI_TABELA_STUDENT   5
+#define NR_CAMPURI_TABELA_MATERIE   3
+#define NR_CAMPURI_TABELA_INROLARE  3
 
 typedef struct {
     char *camp;
@@ -124,9 +127,9 @@ int is_valid_field(char *nume_tabela, char *camp) {
           Acel caracter trebuie sters inaine de a apela functia!
 */
 char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
-    char **conditii_strings = NULL;
     *nr_conditii = 0;
-    
+    char **conditii_strings = NULL;
+
     const char *delim = "AND";
     size_t len_delim = strlen(delim);
     char *ptr = str_conditii;
@@ -153,7 +156,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
         conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
         strcpy(conditii_strings[idx], ptr);
     }
-    
+
     return conditii_strings;
 }
 
@@ -222,11 +225,11 @@ int match_student_on_conditie(student student, conditie cond) {
             return student.id <= id;
         if (!strcmp(cond.op_comp, ">="))
             return student.id >= id;
-            
+
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume")) {
         char *nume = cond.valoare;
-        
+
         if (!strcmp(cond.op_comp, "="))
             return strcmp(student.nume, nume) == 0;
         if (!strcmp(cond.op_comp, "!="))
@@ -250,7 +253,6 @@ int match_student_on_conditie(student student, conditie cond) {
             return student.an_studiu >= an;
 
         return 0;   // Conditie WHERE invalida
-    
     } else if (!strcmp(cond.camp, "statut")) {
         char statut = cond.valoare[0];
 
@@ -307,7 +309,7 @@ int match_materie_on_conditie(materie materie, conditie cond) {
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume")) {
         char *nume = cond.valoare;
-        
+
         if (!strcmp(cond.op_comp, "="))
             return strcmp(materie.nume, nume) == 0;
         if (!strcmp(cond.op_comp, "!="))
@@ -316,7 +318,7 @@ int match_materie_on_conditie(materie materie, conditie cond) {
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume_titular")) {
         char *nume_titular = cond.valoare;
-        
+
         if (!strcmp(cond.op_comp, "="))
             return strcmp(materie.nume_titular, nume_titular) == 0;
         if (!strcmp(cond.op_comp, "!="))
@@ -336,7 +338,7 @@ int match_materie_on_conditie(materie materie, conditie cond) {
 int match_inrolare_on_conditie(inrolare inrolare, conditie cond) {
     if (!strcmp(cond.camp, "id_student")) {
         int id_student = atoi(cond.valoare);
-        
+
         if (!strcmp(cond.op_comp, "="))
             return inrolare.id_student == id_student;
         if (!strcmp(cond.op_comp, "!="))
@@ -353,7 +355,7 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond) {
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "id_materie")) {
         int id_materie = atoi(cond.valoare);
-        
+
         if (!strcmp(cond.op_comp, "="))
             return inrolare.id_materie == id_materie;
         if (!strcmp(cond.op_comp, "!="))
@@ -431,7 +433,7 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie 
 
 
 void SELECT_FROM_studenti(secretariat *secretariat,
-    int nr_campuri, char **campuri, 
+    int nr_campuri, char **campuri,
     int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_studenti; i++) {
         student student = secretariat->studenti[i];
@@ -439,17 +441,17 @@ void SELECT_FROM_studenti(secretariat *secretariat,
         if (nr_conditii > 0
             && !match_student_on_all_conditii(student, nr_conditii, conditii))
             continue;
-        
+
         for (int j = 0; j < nr_campuri; j++) {
-            if (!strcmp(campuri[j], "id"))
+            if (!strcmp(campuri[j], "id")) {
                 printf("%d", student.id);
-            else if (!strcmp(campuri[j], "nume"))
+            } else if (!strcmp(campuri[j], "nume")) {
                 printf("%s", student.nume);
-            else if (!strcmp(campuri[j], "an_studiu"))
+            } else if (!strcmp(campuri[j], "an_studiu")) {
                 printf("%d", student.an_studiu);
-            else if (!strcmp(campuri[j], "statut"))
+            } else if (!strcmp(campuri[j], "statut")) {
                 printf("%c", student.statut);
-            else if (!strcmp(campuri[j], "medie_generala")) {
+            } else if (!strcmp(campuri[j], "medie_generala")) {
                 // Rotunjire in sus la 2 zecimale:
                 printf("%.2f", ceil(student.medie_generala * 100) / 100);
             }
@@ -462,7 +464,7 @@ void SELECT_FROM_studenti(secretariat *secretariat,
 }
 
 void SELECT_FROM_materii(secretariat *secretariat,
-    int nr_campuri, char **campuri, 
+    int nr_campuri, char **campuri,
     int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_materii; i++) {
         materie materie = secretariat->materii[i];
@@ -483,13 +485,12 @@ void SELECT_FROM_materii(secretariat *secretariat,
                 printf(" ");
         }
         printf("\n");
-
     }
 }
 
 
 void SELECT_FROM_inrolari(secretariat *secretariat,
-    int nr_campuri, char **campuri, 
+    int nr_campuri, char **campuri,
     int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_inrolari; i++) {
         inrolare inrolare = secretariat->inrolari[i];
@@ -523,7 +524,7 @@ char **allocate_campuri(int nr_campuri) {
 }
 
 char **build_campuri_STUDENTI(int *nr_campuri) {
-    (*nr_campuri) = 5;
+    (*nr_campuri) = NR_CAMPURI_TABELA_STUDENT;
 
     char **campuri = allocate_campuri(*nr_campuri);
     strcpy(campuri[0], "id");
@@ -535,7 +536,7 @@ char **build_campuri_STUDENTI(int *nr_campuri) {
 }
 
 char **build_campuri_METERIE(int *nr_campuri) {
-    (*nr_campuri) = 3;
+    (*nr_campuri) = NR_CAMPURI_TABELA_MATERIE;
 
     char **campuri = allocate_campuri(*nr_campuri);
     strcpy(campuri[0], "id");
@@ -546,7 +547,7 @@ char **build_campuri_METERIE(int *nr_campuri) {
 
 
 char **build_campuri_INROLARE(int *nr_campuri) {
-    (*nr_campuri) = 3;
+    (*nr_campuri) = NR_CAMPURI_TABELA_INROLARE;
 
     char **campuri = allocate_campuri(*nr_campuri);
     strcpy(campuri[0], "id_student");
@@ -692,12 +693,12 @@ void SELECT(secretariat *secretariat, char *interogare) {
     if (!strcmp(nume_tabela, "studenti")) {
         SELECT_FROM_studenti(
             secretariat,
-            nr_campuri, campuri, 
+            nr_campuri, campuri,
             nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "materii")) {
         SELECT_FROM_materii(
             secretariat,
-            nr_campuri, campuri, 
+            nr_campuri, campuri,
             nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "inrolari")) {
         SELECT_FROM_inrolari(
@@ -736,7 +737,6 @@ void UPDATE_studenti(secretariat *secretariat,
         } else if (!strcmp(camp, "medie_generala")) {
             student->medie_generala = (float) atof(valoare);
         }
-        
     }
 }
 
@@ -749,7 +749,7 @@ void UPDATE_materii(secretariat *secretariat,
         if (nr_conditii > 0
             && !match_materie_on_all_conditii(*materie, nr_conditii, conditii))
             continue;
-        
+
         if (!strcmp(camp, "id")) {
             materie->id = atoi(valoare);
         } else if (!strcmp(camp, "nume")) {
