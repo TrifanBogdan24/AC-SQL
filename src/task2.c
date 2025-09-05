@@ -800,6 +800,8 @@ void UPDATE_inrolari(secretariat *secretariat,
         } else if (!strcmp(camp, "id_materie")) {
             inrolare->id_materie = atoi(valoare);
         } else if (!strcmp(camp, "note")) {
+            printf("Note: \"%s\"\n", valoare);
+
             char *token = strtok(valoare, " ");
             inrolare->note[0] = atof(token);   // Laborator
 
@@ -808,6 +810,11 @@ void UPDATE_inrolari(secretariat *secretariat,
 
             token = strtok(NULL, " ");
             inrolare->note[2] = atof(token);  // Examen final
+
+            printf("Nota laborator: %.2f\n", inrolare->note[0]);
+            printf("Nota partial: %.2f\n", inrolare->note[1]);
+            printf("Nota final: %.2f\n", inrolare->note[2]);
+
 
             // Updateaza mediile
             calculeaza_medii_generale(secretariat);
@@ -906,7 +913,28 @@ void UPDATE(secretariat *secretariat, char *interogare)
 }
 
 
+void DELETE_FROM_inrolari(
+    secretariat *secretariat,
+    int nr_conditii, conditie *conditii)
+{
+    int idx = 0;
 
+    while (idx < secretariat->nr_inrolari) {
+        inrolare inrolare = secretariat->inrolari[idx];
+        if (!match_inrolare_on_all_conditii(inrolare, nr_conditii, conditii)) {
+            idx++;
+            continue;
+        }
+
+        // Altfel, sterg inrolarea cu indicele 'idx' din vector:
+        for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
+            secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
+        
+        // Redimensionez vectorul:
+        secretariat->nr_inrolari -= 1;
+        secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
+    }
+}
 
 
 void DELETE_FROM_studenti(
@@ -921,6 +949,8 @@ void DELETE_FROM_studenti(
             idx++;
             continue;
         }
+
+        printf("Sterge studentul cu ID = %d\n", student.id);
 
         // Altfel, sterg studentul cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_studenti - 1; i++)
@@ -957,28 +987,7 @@ void DELETE_FROM_materii(
 }
 
 
-void DELETE_FROM_inrolari(
-    secretariat *secretariat,
-    int nr_conditii, conditie *conditii)
-{
-    int idx = 0;
 
-    while (idx < secretariat->nr_inrolari) {
-        inrolare inrolare = secretariat->inrolari[idx];
-        if (!match_inrolare_on_all_conditii(inrolare, nr_conditii, conditii)) {
-            idx++;
-            continue;
-        }
-
-        // Altfel, sterg inrolarea cu indicele 'idx' din vector:
-        for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
-            secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
-        
-        // Redimensionez vectorul:
-        secretariat->nr_inrolari -= 1;
-        secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
-    }
-}
 
 
 /* Template

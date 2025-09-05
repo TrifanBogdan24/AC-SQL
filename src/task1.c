@@ -67,22 +67,22 @@ student parseaza_intrare_student(char *linie)
     student.medie_generala = 0.0;
 
     char *token = strtok(linie, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     student.id = atoi(token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     strcpy(student.nume, token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     student.an_studiu = atoi(token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     student.statut = token[0];
 
@@ -95,18 +95,18 @@ materie parseaza_intrare_materie(char *linie)
     materie materie;
 
     char *token = strtok(linie, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     materie.id = atoi(token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     materie.nume = (char *) malloc(150 * sizeof(char));
     trim(token);
     strcpy(materie.nume, token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     materie.nume_titular = (char *) malloc(150 * sizeof(char));
     trim(token);
     strcpy(materie.nume_titular, token);
@@ -121,25 +121,25 @@ inrolare parseaza_intrare_inrolare(char *linie)
     inrolare inrolare;
 
     char *token = strtok(linie, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     inrolare.id_student = atoi(token);
 
     token = strtok(NULL, SEP);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
     inrolare.id_materie = atoi(token);
 
     token = strtok(NULL, SPACE_CHARS);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     inrolare.note[0] = atof(token);    // Laborator
 
     token = strtok(NULL, SPACE_CHARS);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     inrolare.note[1] = atof(token);    // (Examen) Partial
 
     token = strtok(NULL, SPACE_CHARS);
-    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!");
+    DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     inrolare.note[2] = atof(token);    // (Examen) Final
 
     return inrolare;
@@ -220,19 +220,20 @@ secretariat *citeste_secretariat(const char *nume_fisier)
     {
         fgets(linie, 100, fin);
         linie[strlen(linie) - 1] = '\0';
+        trim(linie);
 
         if (!strlen(linie)) {
             // Empty linie
             continue;
         }
 
-        if (!strcmp(linie, "[STUDENTI]\0")) {
+        if (!strcmp(linie, "[STUDENTI]")) {
             // Incepe citirea din tabela "STUDENTI"
             table = TABELA_STUDENTI;
-        } else if (!strcmp(linie, "[MATERII]\0")) {
+        } else if (!strcmp(linie, "[MATERII]")) {
             // Incepe citirea din tabela "MATERII"
             table = TABELA_MATERII;
-        } else if (!strcmp(linie, "[INROLARI]\0")) {
+        } else if (!strcmp(linie, "[INROLARI]")) {
             // Incepe citirea din tabela "INROLARI"
             table = TABELA_INROLARI;
         } else {
