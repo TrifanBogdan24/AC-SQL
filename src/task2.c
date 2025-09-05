@@ -1,7 +1,9 @@
+#include <math.h>
 #include "task2.h"
 #include "task1.h"
 #include "trim.h"
-#include <math.h>
+
+#define BUFFER_LENGTH 256
 
 typedef struct {
     char *camp;
@@ -10,8 +12,7 @@ typedef struct {
 } conditie;
 
 /* Elibereaza memoria alocata vectorului */
-void elibereaza_conditiile(int nr_conditii, conditie **conditii)
-{
+void elibereaza_conditiile(int nr_conditii, conditie **conditii) {
     if (!conditii || !(*conditii)) return;
 
     for (int i = 0; i < nr_conditii; i++) {
@@ -21,15 +22,13 @@ void elibereaza_conditiile(int nr_conditii, conditie **conditii)
             free((*conditii)[i].op_comp);
         if ((*conditii)[i].valoare)
             free((*conditii)[i].valoare);
-        
     }
 
     free(*conditii);
 }
 
 /* Elibereaza memoria alocata matricii (array de string-uri) */
-void elibereaza_strings(int nr_strings, char ***strings)
-{
+void elibereaza_strings(int nr_strings, char ***strings) {
     if (!strings || !(*strings)) return;
 
     for (int i = 0; i < nr_strings; i++)
@@ -42,8 +41,7 @@ void elibereaza_strings(int nr_strings, char ***strings)
 /*
  * Elimina ghilimelele/apostrofurile de la inceputul si sfarsitul sirului
 */
-void remove_trailing_quotation_marks(char *str)
-{
+void remove_trailing_quotation_marks(char *str) {
     if (!str) return;
 
     size_t len = strlen(str);
@@ -61,8 +59,7 @@ void remove_trailing_quotation_marks(char *str)
  * Daca tabela exista in baza de date, atunci intoarce 1 (TRUE)
  * Altfel, scrie un text de eroare si intoarce 0 (FALSE)
 */
-int is_valid_table(const char *nume_tabela)
-{
+int is_valid_table(const char *nume_tabela) {
     if (strcmp(nume_tabela, "studenti")
         && strcmp(nume_tabela, "materii")
         && strcmp(nume_tabela, "inrolari")) {
@@ -78,8 +75,7 @@ int is_valid_table(const char *nume_tabela)
  * Daca tabela contine o coloana cu numele campului, atunci intoarce 1 (TRUE)
  * Altfel, return 0 (FALSE)
 */
-int is_valid_field(char *nume_tabela, char *camp)
-{
+int is_valid_field(char *nume_tabela, char *camp) {
     for (size_t i = 0; i < strlen(camp); i++) {
         if (!isspace(camp[i]))
             continue;
@@ -127,8 +123,7 @@ int is_valid_field(char *nume_tabela, char *camp)
  ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
           Acel caracter trebuie sters inaine de a apela functia!
 */
-char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
-{
+char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
     char **conditii_strings = NULL;
     *nr_conditii = 0;
     
@@ -143,7 +138,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
         (*nr_conditii)++;
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
-        conditii_strings[idx] = malloc(250 * sizeof(char));
+        conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
         strcpy(conditii_strings[idx], ptr);
 
         ptr = found + len_delim;
@@ -155,7 +150,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
         (*nr_conditii)++;
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
-        conditii_strings[idx] = malloc(250 * sizeof(char));
+        conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
         strcpy(conditii_strings[idx], ptr);
     }
     
@@ -176,8 +171,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
  ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
           Acel caracter trebuie sters inaine de a apela functia!
 */
-conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
-{
+conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii) {
     (*nr_conditii) = 0;
     char **conditii_strings = split_conditii_into_strings(str_conditii, nr_conditii);
 
@@ -186,9 +180,9 @@ conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
     for (int i = 0; i < *nr_conditii; i++) {
         // <camp> <operator> <valoare>
         conditie *conditie = &conditii[i];
-        conditie->camp = (char *) malloc(150 * sizeof(char));
-        conditie->op_comp = (char *) malloc(150 * sizeof(char));
-        conditie->valoare = (char *) malloc(150 * sizeof(char));
+        conditie->camp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+        conditie->op_comp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+        conditie->valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
 
         char *token = strtok(conditii_strings[i], " ");
         strcpy(conditie->camp, token);
@@ -212,8 +206,7 @@ conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
  * Returneaza 1 (TRUE) daca STUDENTUL respecta conditia,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_student_on_conditie(student student, conditie cond)
-{
+int match_student_on_conditie(student student, conditie cond) {
     if (!strcmp(cond.camp, "id")) {
         int id = atoi(cond.valoare);
 
@@ -268,7 +261,7 @@ int match_student_on_conditie(student student, conditie cond)
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "medie_generala")) {
-        float medie_generala = atof(cond.valoare);
+        float medie_generala = (float) atof(cond.valoare);
 
         if (!strcmp(cond.op_comp, "="))
             return student.medie_generala == medie_generala;
@@ -294,8 +287,7 @@ int match_student_on_conditie(student student, conditie cond)
  * Returneaza 1 (TRUE) daca MATERIA respecta conditia,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_materie_on_conditie(materie materie, conditie cond)
-{
+int match_materie_on_conditie(materie materie, conditie cond) {
     if (!strcmp(cond.camp, "id")) {
         int id = atoi(cond.valoare);
 
@@ -341,8 +333,7 @@ int match_materie_on_conditie(materie materie, conditie cond)
  * Returneaza 1 (TRUE) daca INROLAREA respecta conditia,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
-{
+int match_inrolare_on_conditie(inrolare inrolare, conditie cond) {
     if (!strcmp(cond.camp, "id_student")) {
         int id_student = atoi(cond.valoare);
         
@@ -379,13 +370,13 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "note")) {
         char *token = strtok(cond.valoare, " ");
-        float nota_laborator = atof(token);
+        float nota_laborator = (float) atof(token);
 
         token = strtok(NULL, " ");
-        float nota_partial = atof(token);
+        float nota_partial = (float) atof(token);
 
         token = strtok(NULL, " ");
-        float nota_final = atof(token);
+        float nota_final = (float) atof(token);
 
         if (!strcmp(cond.op_comp, "="))
             return (nota_laborator == inrolare.note[0]
@@ -406,8 +397,7 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
  * Returneaza 1 (TRUE) daca STUDENTUL respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_student_on_all_conditii(student student, int nr_conditii, conditie *conditii)
-{
+int match_student_on_all_conditii(student student, int nr_conditii, conditie *conditii) {
     for (int i = 0; i < nr_conditii; i++)
         if (!match_student_on_conditie(student, conditii[i]))
             return 0;
@@ -419,8 +409,7 @@ int match_student_on_all_conditii(student student, int nr_conditii, conditie *co
  * Returneaza 1 (TRUE) daca MATERIA respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_materie_on_all_conditii(materie materie, int nr_conditii, conditie *conditii)
-{
+int match_materie_on_all_conditii(materie materie, int nr_conditii, conditie *conditii) {
     for (int i = 0; i < nr_conditii; i++)
         if (!match_materie_on_conditie(materie, conditii[i]))
             return 0;
@@ -432,8 +421,7 @@ int match_materie_on_all_conditii(materie materie, int nr_conditii, conditie *co
  * Returneaza 1 (TRUE) daca INROLARE respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie *conditii)
-{
+int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie *conditii) {
     for (int i = 0; i < nr_conditii; i++)
         if (!match_inrolare_on_conditie(inrolare, conditii[i]))
             return 0;
@@ -444,8 +432,7 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie 
 
 void SELECT_FROM_studenti(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_studenti; i++) {
         student student = secretariat->studenti[i];
 
@@ -476,8 +463,7 @@ void SELECT_FROM_studenti(secretariat *secretariat,
 
 void SELECT_FROM_materii(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_materii; i++) {
         materie materie = secretariat->materii[i];
 
@@ -504,8 +490,7 @@ void SELECT_FROM_materii(secretariat *secretariat,
 
 void SELECT_FROM_inrolari(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_inrolari; i++) {
         inrolare inrolare = secretariat->inrolari[i];
 
@@ -530,16 +515,14 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
 }
 
 
-char **allocate_campuri(int nr_campuri)
-{
+char **allocate_campuri(int nr_campuri) {
     char **campuri = (char **) malloc(nr_campuri * sizeof(char *));
     for (int i = 0; i < nr_campuri; i++)
-        campuri[i] = (char *) malloc(50 * sizeof(char));
+        campuri[i] = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     return campuri;
 }
 
-char **build_campuri_STUDENTI(int *nr_campuri)
-{
+char **build_campuri_STUDENTI(int *nr_campuri) {
     (*nr_campuri) = 5;
 
     char **campuri = allocate_campuri(*nr_campuri);
@@ -551,8 +534,7 @@ char **build_campuri_STUDENTI(int *nr_campuri)
     return campuri;
 }
 
-char **build_campuri_METERIE(int *nr_campuri)
-{
+char **build_campuri_METERIE(int *nr_campuri) {
     (*nr_campuri) = 3;
 
     char **campuri = allocate_campuri(*nr_campuri);
@@ -563,8 +545,7 @@ char **build_campuri_METERIE(int *nr_campuri)
 }
 
 
-char **build_campuri_INROLARE(int *nr_campuri)
-{
+char **build_campuri_INROLARE(int *nr_campuri) {
     (*nr_campuri) = 3;
 
     char **campuri = allocate_campuri(*nr_campuri);
@@ -575,8 +556,7 @@ char **build_campuri_INROLARE(int *nr_campuri)
 }
 
 
-char **build_campuri(char *nume_tabela, int *nr_campuri)
-{
+char **build_campuri(char *nume_tabela, int *nr_campuri) {
     if (!strcmp(nume_tabela, "studenti")) {
         return build_campuri_STUDENTI(nr_campuri);
     } else if (!strcmp(nume_tabela, "materii")) {
@@ -599,8 +579,7 @@ char **build_campuri(char *nume_tabela, int *nr_campuri)
 
  ATENTIE! Functia nu poate parsa caracterul "*" de globbing
 */
-char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri)
-{
+char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri) {
     *nr_campuri = 0;
     char **campuri = NULL;
 
@@ -630,8 +609,7 @@ SELECT <campuri> FROM <tabel> WHERE <cond1> AND <cond2>;
 
 Campuri - unul sau mai multe nume de coloane, despartite prin virgula ','
 */
-void SELECT(secretariat *secretariat, char *interogare)
-{
+void SELECT(secretariat *secretariat, char *interogare) {
     char *ptr = strstr(interogare, "SELECT");
     if (!ptr) return;
     ptr += strlen("SELECT");
@@ -641,7 +619,7 @@ void SELECT(secretariat *secretariat, char *interogare)
     char *fromPos = strstr(ptr, "FROM");
     if (!fromPos) return;
 
-    char *str_campuri = (char*) malloc(256 * sizeof(char));
+    char *str_campuri = (char*) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(str_campuri, ptr, fromPos - ptr);
     str_campuri[fromPos - ptr] = '\0';
     trim(str_campuri);
@@ -658,7 +636,7 @@ void SELECT(secretariat *secretariat, char *interogare)
     while (isspace((unsigned char)*ptr)) ptr++;
     char *wherePos = strstr(ptr, "WHERE");
 
-    char *nume_tabela = (char*) malloc(128 * sizeof(char));
+    char *nume_tabela = (char*) malloc(BUFFER_LENGTH * sizeof(char));
     if (wherePos) {
         strncpy(nume_tabela, ptr, wherePos - ptr);
         nume_tabela[wherePos - ptr] = '\0';
@@ -672,7 +650,7 @@ void SELECT(secretariat *secretariat, char *interogare)
     trim(nume_tabela);
 
     // Extrage <conditii> (daca exista clauza WHERE)
-    char *str_conditii = (char *) malloc(256 * sizeof(char));
+    char *str_conditii = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     int nr_conditii = 0;
     conditie *conditii = NULL;
 
@@ -724,7 +702,7 @@ void SELECT(secretariat *secretariat, char *interogare)
     } else if (!strcmp(nume_tabela, "inrolari")) {
         SELECT_FROM_inrolari(
             secretariat,
-            nr_campuri, campuri, 
+            nr_campuri, campuri,
             nr_conditii, conditii);
     }
 
@@ -740,8 +718,7 @@ void SELECT(secretariat *secretariat, char *interogare)
 
 void UPDATE_studenti(secretariat *secretariat,
     char *camp, char *valoare,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_studenti; i++) {
         student *student = &secretariat->studenti[i];
 
@@ -757,7 +734,7 @@ void UPDATE_studenti(secretariat *secretariat,
             if (!strlen(valoare)) return;   // Eroare
             student->statut = valoare[0];
         } else if (!strcmp(camp, "medie_generala")) {
-            student->medie_generala = atof(valoare);
+            student->medie_generala = (float) atof(valoare);
         }
         
     }
@@ -765,8 +742,7 @@ void UPDATE_studenti(secretariat *secretariat,
 
 void UPDATE_materii(secretariat *secretariat,
     char *camp, char *valoare,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_materii; i++) {
         materie *materie = &secretariat->materii[i];
 
@@ -786,8 +762,7 @@ void UPDATE_materii(secretariat *secretariat,
 
 void UPDATE_inrolari(secretariat *secretariat,
     char *camp, char *valoare,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     for (int i = 0; i < secretariat->nr_materii; i++) {
         inrolare *inrolare = &secretariat->inrolari[i];
 
@@ -803,13 +778,13 @@ void UPDATE_inrolari(secretariat *secretariat,
             printf("Note: \"%s\"\n", valoare);
 
             char *token = strtok(valoare, " ");
-            inrolare->note[0] = atof(token);   // Laborator
+            inrolare->note[0] = (float) atof(token);   // Laborator
 
             token = strtok(NULL, " ");
-            inrolare->note[1] = atof(token);  // Examen partial
+            inrolare->note[1] = (float) atof(token);  // Examen partial
 
             token = strtok(NULL, " ");
-            inrolare->note[2] = atof(token);  // Examen final
+            inrolare->note[2] = (float) atof(token);  // Examen final
 
             printf("Nota laborator: %.2f\n", inrolare->note[0]);
             printf("Nota partial: %.2f\n", inrolare->note[1]);
@@ -826,8 +801,7 @@ void UPDATE_inrolari(secretariat *secretariat,
 UPDATE <tabel> SET <camp> = <valoare> WHERE <conditie>;
 UPDATE <tabel> SET <camp> = <valoare> WHERE <cond1> AND <cond2>;
 */
-void UPDATE(secretariat *secretariat, char *interogare)
-{
+void UPDATE(secretariat *secretariat, char *interogare) {
     char *ptr = strstr(interogare, "UPDATE");
     if (!ptr)
         return;
@@ -839,7 +813,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
     char *endTable = strstr(ptr, "SET");
     if (!endTable) return;
 
-    char *nume_tabela = (char *) malloc(128 * sizeof(char));
+    char *nume_tabela = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(nume_tabela, ptr, endTable - ptr);
     nume_tabela[endTable - ptr] = '\0';
     trim(nume_tabela);
@@ -850,7 +824,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
     char *endWhere = strstr(ptr, "WHERE");
     if (!endWhere) return;
 
-    char *campValoare = (char *) malloc(128 * sizeof(char));
+    char *campValoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(campValoare, ptr, endWhere - ptr);
     campValoare[endWhere - ptr] = '\0';
     trim(campValoare);
@@ -859,8 +833,8 @@ void UPDATE(secretariat *secretariat, char *interogare)
     char *eq = strchr(campValoare, '=');
     if (!eq) return;
 
-    char *camp = (char *) malloc(64 * sizeof(char));
-    char *valoare = (char *) malloc(64 * sizeof(char));
+    char *camp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+    char *valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(camp, campValoare, eq - campValoare);
     camp[eq - campValoare] = '\0';
     strcpy(valoare, eq + 1);
@@ -873,7 +847,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
     // Extrage conditie/conditii (TOT ce este dupa WHERE)
     ptr = endWhere + strlen("WHERE");
     while (isspace((unsigned char)*ptr)) ptr++;
-    char *str_conditii = (char*) malloc(256 * sizeof(char));
+    char *str_conditii = (char*) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(str_conditii, ptr, strlen(ptr));
     str_conditii[strlen(ptr)] = '\0';
     trim(str_conditii);
@@ -889,17 +863,17 @@ void UPDATE(secretariat *secretariat, char *interogare)
     if (!strcmp(nume_tabela, "studenti")) {
         UPDATE_studenti(
             secretariat,
-            camp, valoare, 
+            camp, valoare,
             nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "materii")) {
         UPDATE_materii(
             secretariat,
-            camp, valoare, 
+            camp, valoare,
             nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "inrolari")) {
         UPDATE_inrolari(
             secretariat,
-            camp, valoare, 
+            camp, valoare,
             nr_conditii, conditii);
     }
 
@@ -915,8 +889,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
 
 void DELETE_FROM_inrolari(
     secretariat *secretariat,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     int idx = 0;
 
     while (idx < secretariat->nr_inrolari) {
@@ -929,7 +902,7 @@ void DELETE_FROM_inrolari(
         // Altfel, sterg inrolarea cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
             secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
-        
+
         // Redimensionez vectorul:
         secretariat->nr_inrolari -= 1;
         secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
@@ -939,8 +912,7 @@ void DELETE_FROM_inrolari(
 
 void DELETE_FROM_studenti(
     secretariat *secretariat,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     int idx = 0;
 
     while (idx < secretariat->nr_studenti) {
@@ -955,7 +927,7 @@ void DELETE_FROM_studenti(
         // Altfel, sterg studentul cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_studenti - 1; i++)
             secretariat->studenti[idx] = secretariat->studenti[idx + 1];
-        
+
         // Redimensionez vectorul:
         secretariat->nr_studenti -= 1;
         secretariat->studenti = realloc(secretariat->studenti, secretariat->nr_studenti);
@@ -965,8 +937,7 @@ void DELETE_FROM_studenti(
 
 void DELETE_FROM_materii(
     secretariat *secretariat,
-    int nr_conditii, conditie *conditii)
-{
+    int nr_conditii, conditie *conditii) {
     int idx = 0;
 
     while (idx < secretariat->nr_materii) {
@@ -979,7 +950,7 @@ void DELETE_FROM_materii(
         // Altfel, sterg materia cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_materii - 1; i++)
             secretariat->materii[idx] = secretariat->materii[idx + 1];
-        
+
         // Redimensionez vectorul:
         secretariat->nr_materii -= 1;
         secretariat->materii = realloc(secretariat->materii, secretariat->nr_materii);
@@ -994,8 +965,7 @@ void DELETE_FROM_materii(
 DELETE FROM <tabel> WHERE <conditie>;
 DELETE FROM <tabel> WHERE <conditie1> AND <conditie2>;
 */
-void DELETE(secretariat *secretariat, char *interogare)
-{
+void DELETE(secretariat *secretariat, char *interogare) {
     char *ptr = strstr(interogare, "DELETE FROM");
     if (!ptr) return;
     ptr += strlen("DELETE FROM");
@@ -1004,7 +974,7 @@ void DELETE(secretariat *secretariat, char *interogare)
     while (isspace((unsigned char)*ptr)) ptr++;
     char *wherePos = strstr(ptr, "WHERE");
 
-    char *nume_tabela = (char*) malloc(128 * sizeof(char));
+    char *nume_tabela = (char*) malloc(BUFFER_LENGTH * sizeof(char));
     if (wherePos) {
         strncpy(nume_tabela, ptr, wherePos - ptr);
         nume_tabela[wherePos - ptr] = '\0';
@@ -1018,7 +988,7 @@ void DELETE(secretariat *secretariat, char *interogare)
     trim(nume_tabela);
 
     // Extrage conditiile (daca exista)
-    char *str_conditii = (char*) malloc(256 * sizeof(char));
+    char *str_conditii = (char*) malloc(BUFFER_LENGTH * sizeof(char));
     if (wherePos) {
         ptr = wherePos + strlen("WHERE");
         while (isspace((unsigned char)*ptr)) ptr++;
@@ -1053,8 +1023,7 @@ void DELETE(secretariat *secretariat, char *interogare)
 
 
 
-void proceseaza_interogare(secretariat *secretariat, char *interogare)
-{
+void proceseaza_interogare(secretariat *secretariat, char *interogare) {
     trim(interogare);
 
     if (!strlen(interogare)) {
@@ -1095,10 +1064,10 @@ int main(int argc, char *argv[]) {
     scanf("%d", &nr_interogari);
     getc(stdin);   // Citeste new-line '\n'
 
-    char *linie = (char *) malloc(250 * sizeof(char));
+    char *linie = (char *) malloc(BUFFER_LENGTH * sizeof(char));
 
     for (int i = 0; i < nr_interogari; i++) {
-        fgets(linie, 250, stdin);
+        fgets(linie, BUFFER_LENGTH, stdin);
 
         // Inlocuieste new-line ('\n') cu NULL terminator ('\0'):
         linie[strlen(linie) - 1] = '\0';
