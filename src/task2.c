@@ -50,7 +50,7 @@ void remove_trailing_quotation_marks(char *str)
     if (len >= 2 &&
         ((str[0] == '\'' && str[len - 1] == '\'')
         ||(str[0] == '\"' && str[len - 1] == '\"'))) {
-        strcpy(str, str + 1);
+        memmove(str, str + 1, strlen(str));
         len--;
         str[len - 1] = '\0';
     }
@@ -897,6 +897,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
     }
 
     free(nume_tabela);
+    free(campValoare);
     free(camp);
     free(valoare);
     free(str_conditii);
