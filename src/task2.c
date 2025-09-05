@@ -195,7 +195,11 @@ int match_student_on_conditie(student student, conditie cond)
             return student.id < id;
         if (!strcmp(cond.op_comp, ">"))
             return student.id > id;
-
+        if (!strcmp(cond.op_comp, "<="))
+            return student.id <= id;
+        if (!strcmp(cond.op_comp, ">="))
+            return student.id >= id;
+            
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume")) {
         char *nume = cond.valoare;
@@ -217,6 +221,10 @@ int match_student_on_conditie(student student, conditie cond)
             return student.an_studiu < an;
         if (!strcmp(cond.op_comp, ">"))
             return student.an_studiu > an;
+        if (!strcmp(cond.op_comp, "<="))
+            return student.an_studiu <= an;
+        if (!strcmp(cond.op_comp, ">="))
+            return student.an_studiu >= an;
 
         return 0;   // Conditie WHERE invalida
     
@@ -240,6 +248,10 @@ int match_student_on_conditie(student student, conditie cond)
             return student.medie_generala < medie_generala;
         if (!strcmp(cond.op_comp, ">"))
             return student.medie_generala > medie_generala;
+        if (!strcmp(cond.op_comp, "<="))
+            return student.medie_generala <= medie_generala;
+        if (!strcmp(cond.op_comp, ">="))
+            return student.medie_generala >= medie_generala;
 
         return 0;   // Conditie WHERE invalida
     }
@@ -265,6 +277,10 @@ int match_materie_on_conditie(materie materie, conditie cond)
             return materie.id < id;
         if (!strcmp(cond.op_comp, ">"))
             return materie.id > id;
+        if (!strcmp(cond.op_comp, "<="))
+            return materie.id <= id;
+        if (!strcmp(cond.op_comp, ">="))
+            return materie.id >= id;
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume")) {
@@ -308,6 +324,10 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
             return inrolare.id_student < id_student;
         if (!strcmp(cond.op_comp, ">"))
             return inrolare.id_student > id_student;
+        if (!strcmp(cond.op_comp, "<="))
+            return inrolare.id_student <= id_student;
+        if (!strcmp(cond.op_comp, ">="))
+            return inrolare.id_student >= id_student;
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "id_materie")) {
@@ -321,6 +341,10 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
             return inrolare.id_materie < id_materie;
         if (!strcmp(cond.op_comp, ">"))
             return inrolare.id_materie > id_materie;
+        if (!strcmp(cond.op_comp, "<="))
+            return inrolare.id_materie <= id_materie;
+        if (!strcmp(cond.op_comp, ">="))
+            return inrolare.id_materie >= id_materie;
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "note")) {
@@ -409,7 +433,7 @@ void SELECT_FROM_studenti(secretariat *secretariat,
             else if (!strcmp(campuri[j], "statut"))
                 printf("%c", student.statut);
             else if (!strcmp(campuri[j], "medie_generala"))
-                printf("%.1f", student.medie_generala);
+                printf("%.2f", student.medie_generala);
             else
                 fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
 
@@ -467,7 +491,7 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
             else if (!strcmp(campuri[j], "id_materie"))
                 printf("%d", inrolare.id_materie);
             else if (!strcmp(campuri[j], "note"))
-                printf("%.1f %.1f %.1f",
+                printf("%.2f %.2f %.2f",
                     inrolare.note[0], inrolare.note[1], inrolare.note[2]);
             else
                 fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);

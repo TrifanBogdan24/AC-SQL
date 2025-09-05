@@ -1,13 +1,7 @@
-"id_student" "=" "1"
-id_student
-id_student
- id_materie
-id_materie
- note
-ntee
-Camp[0] = "id_student"
-bine 3
-camp[0] = "id_student"
-camp[1] = "id_materie"
-camp[2] = "ntee"
-1 8 
+1 8 2.50 3.00 5.00
+Nicolescu Elena 3
+Pogoran Adrian 4
+Trandaf Denisa 1
+Ionescu Teodor 4
+Popescu Adrian 3
+Andrei Marian 3
