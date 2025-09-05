@@ -4,41 +4,12 @@
 
 typedef struct {
     char *camp;
-    char *op_comp;
+    char *op_comp;  // Operatorul de comperatie
     char *valoare;
 } conditie;
 
 
-/*
- Parseaza campurile din clauza SELECT si intoarce un array de string-uri
- 
- Exemplu:
- if (toate_campurile == "nume") return ["nume"]
- if (toate_campurile == "nume, medie_generala") return ["nume", "medie_generala"]
 
- ATENTIE! Functia nu poate parsa caracterul "*" de globbing
-*/
-char **parseaza_campuri_SELECT(char *toate_campurile, int *nr_campuri)
-{
-    char **campuri = NULL;
-    char *token = strtok(toate_campurile, ",");
-
-    (*nr_campuri) = 0;
-
-    while (token) {
-        printf("%s\n", token);
-        (*nr_campuri)++;
-        int idx = (*nr_campuri) - 1;
-        campuri = realloc(campuri, *nr_campuri * sizeof(char*));
-        campuri[idx] = malloc(150 * sizeof(char));
-        strcpy(campuri[idx], token);
-        trim(campuri[idx]);
-        token = strtok(NULL, ",");
-        printf("%s\n", campuri[idx]);
-    }
-
-    return campuri;
-}
 
 
 
@@ -102,36 +73,34 @@ int is_valid_field(char *nume_tabela, char *camp)
 
 
 
-
-
 /*
  Imparte conditiile in mai multe siruri.
 
  Exemplu:
- if (clauza_where == "id = 0") return ["id = 0"]
- if (clauza_where == "id = 0 AND nume = USO") return ["id = 0", "nume = USO"]
+ if (str_conditii == "id = 0") return ["id = 0"]
+ if (str_conditii == "id = 0 AND nume = USO") return ["id = 0", "nume = USO"]
 
  ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
           Acel caracter trebuie sters inaine de a apela functia!
 */
-char **get_conditii_strings_clauza_WHERE(char *clauza_where, int *nr_conditii)
+char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
 {
-    char **conditii = NULL;
+    char **conditii_strings = NULL;
     *nr_conditii = 0;
     
     const char *delim = "AND";
     size_t len_delim = strlen(delim);
-    char *ptr = clauza_where;
+    char *ptr = str_conditii;
     char *found = strstr(ptr, delim);  // prima căutare
 
     while (found) {
         *found = '\0';
 
         (*nr_conditii)++;
-        conditii = realloc(conditii, *nr_conditii * sizeof(char*));
+        conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
-        conditii[idx] = malloc(250 * sizeof(char));
-        strcpy(conditii[idx], ptr);
+        conditii_strings[idx] = malloc(250 * sizeof(char));
+        strcpy(conditii_strings[idx], ptr);
 
         ptr = found + len_delim;
         found = strstr(ptr, delim);
@@ -140,22 +109,22 @@ char **get_conditii_strings_clauza_WHERE(char *clauza_where, int *nr_conditii)
     // Ultima bucata (dupa ultimul "AND" sau intregul sir daca nu exista "AND")
     if (*ptr != '\0') {
         (*nr_conditii)++;
-        conditii = realloc(conditii, *nr_conditii * sizeof(char*));
+        conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
-        conditii[idx] = malloc(250 * sizeof(char));
-        strcpy(conditii[idx], ptr);
+        conditii_strings[idx] = malloc(250 * sizeof(char));
+        strcpy(conditii_strings[idx], ptr);
     }
     
-    return conditii;
+    return conditii_strings;
 }
 
 /*
  Parseaza clauza WHERE si returneaza un array de conditii, plasate in struct-uri
 
- if (clauza_where == "id = 0") return [
+ if (str_conditii == "id = 0") return [
     conditie(camp="id", op_comp="=", valoare="0")
     ]
- if (clauza_where == "id = 0 AND nume != USO") return [
+ if (str_conditii == "id = 0 AND nume != USO") return [
     conditie(camp="id", op_comp="=", valoare="0"),
     conditie(camp="nume", op_comp="!=", valoare="USO"),
     ]
@@ -163,10 +132,10 @@ char **get_conditii_strings_clauza_WHERE(char *clauza_where, int *nr_conditii)
  ATENTIE! Functia nu se ocupa de eliminarea caracterului ';' de la finalul interogarii.
           Acel caracter trebuie sters inaine de a apela functia!
 */
-conditie *parseaza_clauza_WHERE(char *clauza_where, int *nr_conditii)
+conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
 {
     (*nr_conditii) = 0;
-    char **str_conditii = get_conditii_strings_clauza_WHERE(clauza_where, nr_conditii);
+    char **conditii_strings = split_conditii_into_strings(str_conditii, nr_conditii);
 
     conditie *conditii = (conditie *) malloc((*nr_conditii) * sizeof(conditie));
 
@@ -177,7 +146,7 @@ conditie *parseaza_clauza_WHERE(char *clauza_where, int *nr_conditii)
         conditie->op_comp = (char *) malloc(150 * sizeof(char));
         conditie->valoare = (char *) malloc(150 * sizeof(char));
 
-        char *token = strtok(str_conditii[i], " ");
+        char *token = strtok(conditii_strings[i], " ");
         strcpy(conditie->camp, token);
         trim(conditie->camp);
 
@@ -185,9 +154,19 @@ conditie *parseaza_clauza_WHERE(char *clauza_where, int *nr_conditii)
         strcpy(conditie->op_comp, token);
         trim(conditie->op_comp);
 
-        token = strtok(NULL, " ");
+        token = strtok(NULL, "");
         strcpy(conditie->valoare, token);
         trim(conditie->valoare);
+
+        // Elimina ghilimelele/apostrofurile de la inceput/sfarsit
+        size_t len = strlen(conditie->valoare);
+        if (len >= 2 &&
+            ((conditie->valoare[0] == '\'' && conditie->valoare[len - 1] == '\'')
+            ||(conditie->valoare[0] == '\"' && conditie->valoare[len - 1] == '\"'))) {
+            strcpy(conditie->valoare, conditie->valoare + 1);
+            len--;
+            conditie->valoare[len - 1] = '\0';
+        }
     }
 
     return conditii;
@@ -219,10 +198,6 @@ int match_student_on_conditie(student student, conditie cond)
             return strcmp(student.nume, nume) == 0;
         if (!strcmp(cond.op_comp, "!="))
             return strcmp(student.nume, nume) != 0;
-        if (!strcmp(cond.op_comp, "<"))
-            return strcmp(student.nume, nume) < 0;
-        if (!strcmp(cond.op_comp, ">"))
-            return strcmp(student.nume, nume) > 0;
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "an_studiu")) {
@@ -293,10 +268,6 @@ int match_materie_on_conditie(materie materie, conditie cond)
             return strcmp(materie.nume, nume) == 0;
         if (!strcmp(cond.op_comp, "!="))
             return strcmp(materie.nume, nume) != 0;
-        if (!strcmp(cond.op_comp, "<"))
-            return strcmp(materie.nume, nume) < 0;
-        if (!strcmp(cond.op_comp, ">"))
-            return strcmp(materie.nume, nume) > 0;
 
         return 0;   // Conditie WHERE invalida
     } else if (!strcmp(cond.camp, "nume_titular")) {
@@ -306,10 +277,6 @@ int match_materie_on_conditie(materie materie, conditie cond)
             return strcmp(materie.nume_titular, nume_titular) == 0;
         if (!strcmp(cond.op_comp, "!="))
             return strcmp(materie.nume_titular, nume_titular) != 0;
-        if (!strcmp(cond.op_comp, "<"))
-            return strcmp(materie.nume_titular, nume_titular) < 0;
-        if (!strcmp(cond.op_comp, ">"))
-            return strcmp(materie.nume_titular, nume_titular) > 0;
 
         return 0;   // Conditie WHERE invalida
     }
@@ -379,10 +346,10 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
  * Returneaza 1 (TRUE) daca STUDENTUL respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_student_on_all_conditii(student student, int nr_conds, conditie *conds)
+int match_student_on_all_conditii(student student, int nr_conditii, conditie *conditii)
 {
-    for (int i = 0; i < nr_conds; i++)
-        if (!match_student_on_conditie(student, conds[i]))
+    for (int i = 0; i < nr_conditii; i++)
+        if (!match_student_on_conditie(student, conditii[i]))
             return 0;
     return 1;
 }
@@ -392,10 +359,10 @@ int match_student_on_all_conditii(student student, int nr_conds, conditie *conds
  * Returneaza 1 (TRUE) daca MATERIA respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_materie_on_all_conditii(materie materie, int nr_conds, conditie *conds)
+int match_materie_on_all_conditii(materie materie, int nr_conditii, conditie *conditii)
 {
-    for (int i = 0; i < nr_conds; i++)
-        if (!match_materie_on_conditie(materie, conds[i]))
+    for (int i = 0; i < nr_conditii; i++)
+        if (!match_materie_on_conditie(materie, conditii[i]))
             return 0;
     return 1;
 }
@@ -405,10 +372,10 @@ int match_materie_on_all_conditii(materie materie, int nr_conds, conditie *conds
  * Returneaza 1 (TRUE) daca INROLARE respecta TOATE conditiile,
  * Altfel, intoarce 0 (FALSE)
 */
-int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conds, conditie *conds)
+int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie *conditii)
 {
-    for (int i = 0; i < nr_conds; i++)
-        if (!match_inrolare_on_conditie(inrolare, conds[i]))
+    for (int i = 0; i < nr_conditii; i++)
+        if (!match_inrolare_on_conditie(inrolare, conditii[i]))
             return 0;
     return 1;
 }
@@ -416,13 +383,13 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conds, conditie *co
 
 void SELECT_FROM_studenti(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conds, conditie *conds)
+    int nr_conditii, conditie *conditii)
 {
     for (int i = 0; i < secretariat->nr_studenti; i++) {
         student student = secretariat->studenti[i];
 
-        if (nr_conds > 0
-                && !match_student_on_all_conditii(student, nr_conds, conds))
+        if (nr_conditii > 0
+                && !match_student_on_all_conditii(student, nr_conditii, conditii))
             continue;
         
         for (int j = 0; j < nr_campuri; j++) {
@@ -446,13 +413,13 @@ void SELECT_FROM_studenti(secretariat *secretariat,
 
 void SELECT_FROM_materii(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conds, conditie *conds)
+    int nr_conditii, conditie *conditii)
 {
     for (int i = 0; i < secretariat->nr_materii; i++) {
         materie materie = secretariat->materii[i];
 
-        if (nr_conds > 0
-                && !match_materie_on_all_conditii(materie, nr_conds, conds))
+        if (nr_conditii > 0
+                && !match_materie_on_all_conditii(materie, nr_conditii, conditii))
             continue;
 
         for (int j = 0; j < nr_campuri; j++) {
@@ -474,13 +441,13 @@ void SELECT_FROM_materii(secretariat *secretariat,
 
 void SELECT_FROM_inrolari(secretariat *secretariat,
     int nr_campuri, char **campuri, 
-    int nr_conds, conditie *conds)
+    int nr_conditii, conditie *conditii)
 {
     for (int i = 0; i < secretariat->nr_inrolari; i++) {
         inrolare inrolare = secretariat->inrolari[i];
 
-        if (nr_conds > 0
-            && !match_inrolare_on_all_conditii(inrolare, nr_conds, conds))
+        if (nr_conditii > 0
+            && !match_inrolare_on_all_conditii(inrolare, nr_conditii, conditii))
             continue;
 
         for (int j = 0; j < nr_campuri; j++) {
@@ -502,9 +469,9 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
 
 char **allocate_campuri(int nr_campuri)
 {
-    char **campuri = (char **) malloc(nr_campuri * sizeof(char));
+    char **campuri = (char **) malloc(nr_campuri * sizeof(char *));
     for (int i = 0; i < nr_campuri; i++)
-        campuri[i] = (char *) malloc(30 * sizeof(char));
+        campuri[i] = (char *) malloc(50 * sizeof(char));
     return campuri;
 }
 
@@ -560,101 +527,132 @@ char **build_campuri(char *nume_tabela, int *nr_campuri)
 }
 
 
+/*
+ Parseaza campurile din clauza SELECT si intoarce un array de string-uri
+ 
+ Exemplu:
+ if (str_conditii == "nume") return ["nume"]
+ if (str_conditii == "nume, medie_generala") return ["nume", "medie_generala"]
+
+ ATENTIE! Functia nu poate parsa caracterul "*" de globbing
+*/
+char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri)
+{
+    char **campuri = NULL;
+    char *token = strtok(str_conditii, ",");
+
+    (*nr_campuri) = 0;
+
+    while (token) {
+        printf("%s\n", token);
+        (*nr_campuri)++;
+        int idx = (*nr_campuri) - 1;
+        campuri = realloc(campuri, *nr_campuri * sizeof(char*));
+        campuri[idx] = malloc(150 * sizeof(char));
+        strcpy(campuri[idx], token);
+        trim(campuri[idx]);
+        token = strtok(NULL, ",");
+        printf("%s\n", campuri[idx]);
+    }
+
+    return campuri;
+}
+
+
 /* Template:
-SELECT <campuri> FROM <tabel> WHERE <camp> <comp> <valoare>;
+SELECT * FROM <tabel>;
 SELECT <campuri> FROM <tabel>;
+SELECT <campuri> FROM <tabel> WHERE <camp> <operator> <valoare>;
+SELECT <campuri> FROM <tabel> WHERE <cond1> AND <cond2>;
+
+Campuri - unul sau mai multe nume de coloane, despartite prin virgula ','
 */
 void SELECT(secretariat *secretariat, char *interogare)
 {
-    char *ptr_SELECT = strstr(interogare, "SELECT ");
-    char *ptr_FROM   = strstr(interogare, " FROM ");
-    char *ptr_WHERE  = strstr(interogare, " WHERE ");
+    char *ptr = strstr(interogare, "SELECT");
+    if (!ptr) return;
+    ptr += strlen("SELECT");
 
-    if (!ptr_SELECT) {
-        fprintf(stderr, "[EROARE] Interogarea nu contine clauza 'SELECT'\n");
-        return;
-    }
+    // Extrage <campuri>
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *fromPos = strstr(ptr, "FROM");
+    if (!fromPos) return;
 
-    if (!ptr_FROM) {
-        fprintf(stderr, "[EROARE] Interogarea nu contine clauza 'FROM'\n");
-        return;
-    }
-
-    int idx_SELECT = ptr_SELECT - interogare;
-    int idx_FROM = ptr_FROM - interogare;
-
-    char *nume_tabela = (char*) malloc(100 * sizeof(char));
-    char *toate_campurile = (char*) malloc(100 * sizeof(char));
-    
-    int buffer_len = 0;
-    int ret_val = 0;
-
-    buffer_len = idx_FROM - idx_SELECT - strlen("SELECT ");
-    strncpy(
-        toate_campurile,
-        interogare + idx_SELECT + strlen("SELECT "),
-        buffer_len);
-    toate_campurile[buffer_len] = '\0';
-    trim(toate_campurile);
-
-    // Are valoarea '1' in caz de "SELECT *" si '0' atunci cand "SELECT <campuri>"
-    int is_select_all =
-        (strcmp(toate_campurile, "*") == 0);
+    char *str_campuri = (char*) malloc(256 * sizeof(char));
+    strncpy(str_campuri, ptr, fromPos - ptr);
+    str_campuri[fromPos - ptr] = '\0';
+    trim(str_campuri);
 
     int nr_campuri = 0;
     char **campuri = NULL;
 
-    if (!is_select_all) {
-        // NU se foloseste globbing-ul "*"
-        campuri = parseaza_campuri_SELECT(toate_campurile, &nr_campuri);
+    // Flag pentru "*"
+    int is_select_all =
+        (strcmp(str_campuri, "*") == 0);
+
+    // Extrage <nume_tabela>
+    ptr = fromPos + strlen("FROM");
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *wherePos = strstr(ptr, "WHERE");
+
+    char *nume_tabela = (char*) malloc(128 * sizeof(char));
+    if (wherePos) {
+        strncpy(nume_tabela, ptr, wherePos - ptr);
+        nume_tabela[wherePos - ptr] = '\0';
     } else {
-        // Se foloseste globbing-ul "*"
-        campuri = build_campuri(nume_tabela, &nr_campuri);
+        // pana la ';'
+        char *end = strchr(ptr, ';');
+        if (!end) end = ptr + strlen(ptr);
+        strncpy(nume_tabela, ptr, end - ptr);
+        nume_tabela[end - ptr] = '\0';
     }
-
-    // Conditii din clauza WHERE:
-    int nr_conds = 0;
-    conditie *conds = NULL;
-
-    if (ptr_WHERE) {
-        /* SELECT ... FROM <tabel> WHERE ...; */
-
-        int idx_WHERE = ptr_WHERE - interogare;
-        buffer_len = idx_WHERE - idx_FROM - strlen(" FROM ");
-        strncpy(
-            nume_tabela,
-            interogare + idx_FROM + strlen(" FROM "),
-            buffer_len);
-        nume_tabela[buffer_len] = '\0';
-
-        /* WHERE <camp> <comp> <valoare>; */
-        /* WHERE <conditie1> AND <conditie2> AND ... AND <conditieN>; */
-        char *clauza_WHERE = (char *) malloc(250 * sizeof(char));
-        strncpy(
-            clauza_WHERE,
-            interogare + idx_WHERE + strlen(" WHERE "),
-            250
-        );
-        conds = parseaza_clauza_WHERE(clauza_WHERE, &nr_conds);
-    } else {
-        /* SELECT ... FROM <tabel>; */
-        buffer_len = strlen(interogare) - idx_FROM - strlen(" FROM ");
-        strncpy(
-            nume_tabela,
-            interogare + idx_FROM + strlen(" FROM "),
-            buffer_len);
-        nume_tabela[buffer_len] = '\0';
-    }
-
-
     trim(nume_tabela);
+
+    // Extrage <conditii> (daca exista clauza WHERE)
+    char *str_conditii = (char *) malloc(256 * sizeof(char));
+    int nr_conditii = 0;
+    conditie *conditii = NULL;
+
+    if (wherePos) {
+        ptr = wherePos + strlen("WHERE");
+        while (isspace((unsigned char)*ptr)) ptr++;
+        char *end = strchr(ptr, ';');
+        if (!end) end = ptr + strlen(ptr);
+        strncpy(str_conditii, ptr, end - ptr);
+        str_conditii[end - ptr] = '\0';
+        trim(str_conditii);
+        conditii = parseaza_conditiile_WHERE(str_conditii, &nr_conditii);
+
+        for (int i = 0; i < nr_conditii; i++) {
+            printf("\"%s\" \"%s\" \"%s\"\n",
+                conditii[i].camp, conditii[i].op_comp, conditii[i].valoare);
+        }
+    }
+
+
+
+    if (is_select_all) {
+        // Se foloseste globbing-ul "*"
+        printf("aici\n");
+        campuri = build_campuri(nume_tabela, &nr_campuri);
+        printf("aici NU\n");
+
+    } else {
+        campuri = parseaza_campurile_SELECT(str_campuri, &nr_campuri);
+    }
+
+    for (int i = 0; i < nr_conditii; i++) {
+        printf("Camp[%d] = \"%s\"\n", i, campuri[i]);
+    }
+
+    printf("bine 3\n");
 
     if (!is_valid_table(nume_tabela)) {
         return;
     }
 
 
-    ret_val = 0;
+    int ret_val = 0;
     for (int i = 0; i < nr_campuri; i++) {
         printf("camp[%d] = \"%s\"\n", i, campuri[i]);
         if (!is_valid_field(nume_tabela, campuri[i]))
@@ -669,19 +667,98 @@ void SELECT(secretariat *secretariat, char *interogare)
         SELECT_FROM_studenti(
             secretariat,
             nr_campuri, campuri, 
-            nr_conds, conds);
+            nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "materii")) {
         SELECT_FROM_materii(
             secretariat,
             nr_campuri, campuri, 
-            nr_conds, conds);
+            nr_conditii, conditii);
     } else if (!strcmp(nume_tabela, "inrolari")) {
         SELECT_FROM_inrolari(
             secretariat,
             nr_campuri, campuri, 
-            nr_conds, conds);
+            nr_conditii, conditii);
     }
+
+
+    free(campuri);
+    free(conditii);
+    free(str_campuri);
+    free(str_conditii);
+    free(nume_tabela);
 }
+
+/* Template:
+UPDATE <tabel> SET <camp> = <valoare> WHERE <conditie>;
+UPDATE <tabel> SET <camp> = <valoare> WHERE <cond1> AND <cond2>;
+*/
+void UPDATE(char *interogare)
+{
+    char *ptr = strstr(interogare, "UPDATE");
+    if (!ptr)
+        return;
+
+    ptr += strlen("UPDATE");
+
+    // Exrage <tabel>
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *endTable = strstr(ptr, "SET");
+    if (!endTable) return;
+
+    char *tabel = (char *) malloc(128 * sizeof(char));
+    strncpy(tabel, ptr, endTable - ptr);
+    tabel[endTable - ptr] = '\0';
+    trim(tabel);
+
+    // Extrage partea "<camp> = <valaore>"
+    ptr = endTable + strlen("SET");
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *endWhere = strstr(ptr, "WHERE");
+    if (!endWhere) return;
+
+    char *campValoare = (char *) malloc(128 * sizeof(char));
+    strncpy(campValoare, ptr, endWhere - ptr);
+    campValoare[endWhere - ptr] = '\0';
+    trim(campValoare);
+
+    // Imparte <camp> de <valoare> folosind separatorul '='
+    char *eq = strchr(campValoare, '=');
+    if (!eq) return;
+
+    char *camp = (char *) malloc(64 * sizeof(char));
+    char *valoare = (char *) malloc(64 * sizeof(char));
+    strncpy(camp, campValoare, eq - campValoare);
+    camp[eq - campValoare] = '\0';
+    strcpy(valoare, eq + 1);
+
+    trim(camp);
+    trim(valoare);
+
+    // Extrage conditie/conditii (TOT ce este dupa WHERE)
+    ptr = endWhere + strlen("WHERE");
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *conditii = (char*) malloc(256 * sizeof(char));
+    strncpy(conditii, ptr, strlen(ptr));
+    conditii[strlen(ptr)] = '\0';
+    trim(conditii);
+
+    // Sterge ';' de la final
+    size_t len = strlen(conditii);
+    if (len > 0 && conditii[len - 1] == ';')
+        conditii[len - 1] = '\0';
+
+    printf("Tabel: \"%s\"\n", tabel);
+    printf("Camp: \"%s\"\n", camp);
+    printf("Valoare: \"%s\"\n", valoare);
+    printf("Conditii: \"%s\"\n", conditii);
+
+    free(tabel);
+    free(camp);
+    free(valoare);
+    free(conditii);
+}
+
+
 
 void proceseaza_interogare(secretariat *secretariat, char *interogare)
 {
@@ -696,9 +773,6 @@ void proceseaza_interogare(secretariat *secretariat, char *interogare)
         fprintf(stderr, "[EROARE] Lipseste ';' la final de interogare!\n");
         return;
     }
-
-    // Sterge caracterul punct-si-virgula ';' din textul interogarii
-    interogare[strlen(interogare) - 1] = '\0';
 
 
     if (strstr(interogare, "SELECT ")) {
