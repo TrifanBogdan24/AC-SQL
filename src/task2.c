@@ -90,18 +90,18 @@ int is_valid_field(char *nume_tabela, char *camp) {
     int err_flag = 0;
     if (!strcmp(nume_tabela, "studenti")
         && strcmp(camp, "id") && strcmp(camp, "nume")  && strcmp(camp, "an_studiu")
-        && strcmp(camp, "status") && strcmp(camp, "medie_generala")) {
-        err_flag = 0;
+        && strcmp(camp, "statut") && strcmp(camp, "medie_generala")) {
+        err_flag = 1;
     }
 
     if (!strcmp(nume_tabela, "materii")
         && strcmp(camp, "id") && strcmp(camp, "nume") && strcmp(camp, "nume_titular")) {
-        err_flag = 0;
+        err_flag = 1;
     }
 
     if (!strcmp(nume_tabela, "inrolari")
         && strcmp(camp, "id_student") && strcmp(camp, "id_materie") && strcmp(camp, "note")) {
-        err_flag = 0;
+        err_flag = 1;
     }
 
 
@@ -527,11 +527,11 @@ char **build_campuri_STUDENTI(int *nr_campuri) {
     (*nr_campuri) = NR_CAMPURI_TABELA_STUDENT;
 
     char **campuri = allocate_campuri(*nr_campuri);
-    strcpy(campuri[0], "id");
-    strcpy(campuri[1], "nume");
-    strcpy(campuri[2], "an_studiu");
-    strcpy(campuri[3], "statut");
-    strcpy(campuri[4], "medie_generala");
+    snprintf(campuri[0], BUFFER_LENGTH, "%s", "id");
+    snprintf(campuri[1], BUFFER_LENGTH, "%s", "nume");
+    snprintf(campuri[2], BUFFER_LENGTH, "%s", "an_studiu");
+    snprintf(campuri[3], BUFFER_LENGTH, "%s", "statut");
+    snprintf(campuri[4], BUFFER_LENGTH, "%s", "medie_generala");
     return campuri;
 }
 
@@ -539,9 +539,9 @@ char **build_campuri_METERIE(int *nr_campuri) {
     (*nr_campuri) = NR_CAMPURI_TABELA_MATERIE;
 
     char **campuri = allocate_campuri(*nr_campuri);
-    strcpy(campuri[0], "id");
-    strcpy(campuri[1], "nume");
-    strcpy(campuri[2], "nume_titular");
+    snprintf(campuri[0], BUFFER_LENGTH, "%s", "id");
+    snprintf(campuri[1], BUFFER_LENGTH, "%s", "nume");
+    snprintf(campuri[2], BUFFER_LENGTH, "%s", "nume_titular");
     return campuri;
 }
 
@@ -550,9 +550,9 @@ char **build_campuri_INROLARE(int *nr_campuri) {
     (*nr_campuri) = NR_CAMPURI_TABELA_INROLARE;
 
     char **campuri = allocate_campuri(*nr_campuri);
-    strcpy(campuri[0], "id_student");
-    strcpy(campuri[1], "id_materie");
-    strcpy(campuri[2], "note");
+    snprintf(campuri[0], BUFFER_LENGTH, "id_student");
+    snprintf(campuri[1], BUFFER_LENGTH, "id_materie");
+    snprintf(campuri[2], BUFFER_LENGTH, "note");
     return campuri;
 }
 
@@ -775,8 +775,6 @@ void UPDATE_inrolari(secretariat *secretariat,
         } else if (!strcmp(camp, "id_materie")) {
             inrolare->id_materie = atoi(valoare);
         } else if (!strcmp(camp, "note")) {
-            printf("Note: \"%s\"\n", valoare);
-
             char *token = strtok(valoare, " ");
             inrolare->note[0] = (float) atof(token);   // Laborator
 
@@ -785,11 +783,6 @@ void UPDATE_inrolari(secretariat *secretariat,
 
             token = strtok(NULL, " ");
             inrolare->note[2] = (float) atof(token);  // Examen final
-
-            printf("Nota laborator: %.2f\n", inrolare->note[0]);
-            printf("Nota partial: %.2f\n", inrolare->note[1]);
-            printf("Nota final: %.2f\n", inrolare->note[2]);
-
 
             // Updateaza mediile
             calculeaza_medii_generale(secretariat);

@@ -70,7 +70,7 @@ student parseaza_intrare_student(char *linie) {
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     trim(token);
-    strcpy(student.nume, token);
+    snprintf(student.nume, MAX_STUDENT_NAME, "%s", token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
@@ -98,13 +98,13 @@ materie parseaza_intrare_materie(char *linie) {
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     materie.nume = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     trim(token);
-    strcpy(materie.nume, token);
+    snprintf(materie.nume, MAX_STUDENT_NAME, "%s", token);
 
     token = strtok(NULL, SEP);
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     materie.nume_titular = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     trim(token);
-    strcpy(materie.nume_titular, token);
+    snprintf(materie.nume_titular, sizeof(materie.nume_titular), "%s", token);
 
     return materie;
 }
@@ -148,7 +148,7 @@ void adauga_student(secretariat *s, int id, char *nume, int an_studiu, char stat
 
     student student;
     student.id = id;
-    strcpy(student.nume, nume);
+    snprintf(student.nume, MAX_STUDENT_NAME, "%s", nume);
     student.an_studiu = an_studiu;
     student.statut = statut;
     student.medie_generala = medie_generala;
