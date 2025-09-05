@@ -10,7 +10,22 @@ typedef struct {
 
 
 
+/*
+ * Elimina ghilimelele/apostrofurile de la inceputul si sfarsitul sirului
+*/
+void remove_trailing_quotation_marks(char *str)
+{
+    if (!str) return;
 
+    size_t len = strlen(str);
+    if (len >= 2 &&
+        ((str[0] == '\'' && str[len - 1] == '\'')
+        ||(str[0] == '\"' && str[len - 1] == '\"'))) {
+        strcpy(str, str + 1);
+        len--;
+        str[len - 1] = '\0';
+    }
+}
 
 
 /*
@@ -157,16 +172,7 @@ conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
         token = strtok(NULL, "");
         strcpy(conditie->valoare, token);
         trim(conditie->valoare);
-
-        // Elimina ghilimelele/apostrofurile de la inceput/sfarsit
-        size_t len = strlen(conditie->valoare);
-        if (len >= 2 &&
-            ((conditie->valoare[0] == '\'' && conditie->valoare[len - 1] == '\'')
-            ||(conditie->valoare[0] == '\"' && conditie->valoare[len - 1] == '\"'))) {
-            strcpy(conditie->valoare, conditie->valoare + 1);
-            len--;
-            conditie->valoare[len - 1] = '\0';
-        }
+        remove_trailing_quotation_marks(conditie->valoare);
     }
 
     return conditii;
@@ -381,6 +387,7 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie 
 }
 
 
+
 void SELECT_FROM_studenti(secretariat *secretariat,
     int nr_campuri, char **campuri, 
     int nr_conditii, conditie *conditii)
@@ -389,7 +396,7 @@ void SELECT_FROM_studenti(secretariat *secretariat,
         student student = secretariat->studenti[i];
 
         if (nr_conditii > 0
-                && !match_student_on_all_conditii(student, nr_conditii, conditii))
+            && !match_student_on_all_conditii(student, nr_conditii, conditii))
             continue;
         
         for (int j = 0; j < nr_campuri; j++) {
@@ -419,7 +426,7 @@ void SELECT_FROM_materii(secretariat *secretariat,
         materie materie = secretariat->materii[i];
 
         if (nr_conditii > 0
-                && !match_materie_on_all_conditii(materie, nr_conditii, conditii))
+            && !match_materie_on_all_conditii(materie, nr_conditii, conditii))
             continue;
 
         for (int j = 0; j < nr_campuri; j++) {
@@ -456,7 +463,7 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
             if (!strcmp(campuri[j], "id_materie"))
                 printf("%d", inrolare.id_materie);
             if (!strcmp(campuri[j], "note"))
-                printf("%1.f %1.f %1.f",
+                printf("%.1f %.1f %.1f",
                     inrolare.note[0], inrolare.note[1], inrolare.note[2]);
 
             if (j < nr_campuri - 1)
@@ -544,7 +551,6 @@ char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri)
     (*nr_campuri) = 0;
 
     while (token) {
-        printf("%s\n", token);
         (*nr_campuri)++;
         int idx = (*nr_campuri) - 1;
         campuri = realloc(campuri, *nr_campuri * sizeof(char*));
@@ -552,7 +558,6 @@ char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri)
         strcpy(campuri[idx], token);
         trim(campuri[idx]);
         token = strtok(NULL, ",");
-        printf("%s\n", campuri[idx]);
     }
 
     return campuri;
@@ -622,30 +627,16 @@ void SELECT(secretariat *secretariat, char *interogare)
         str_conditii[end - ptr] = '\0';
         trim(str_conditii);
         conditii = parseaza_conditiile_WHERE(str_conditii, &nr_conditii);
-
-        for (int i = 0; i < nr_conditii; i++) {
-            printf("\"%s\" \"%s\" \"%s\"\n",
-                conditii[i].camp, conditii[i].op_comp, conditii[i].valoare);
-        }
     }
 
 
 
     if (is_select_all) {
         // Se foloseste globbing-ul "*"
-        printf("aici\n");
         campuri = build_campuri(nume_tabela, &nr_campuri);
-        printf("aici NU\n");
-
     } else {
         campuri = parseaza_campurile_SELECT(str_campuri, &nr_campuri);
     }
-
-    for (int i = 0; i < nr_conditii; i++) {
-        printf("Camp[%d] = \"%s\"\n", i, campuri[i]);
-    }
-
-    printf("bine 3\n");
 
     if (!is_valid_table(nume_tabela)) {
         return;
@@ -654,7 +645,6 @@ void SELECT(secretariat *secretariat, char *interogare)
 
     int ret_val = 0;
     for (int i = 0; i < nr_campuri; i++) {
-        printf("camp[%d] = \"%s\"\n", i, campuri[i]);
         if (!is_valid_field(nume_tabela, campuri[i]))
             ret_val = -1;  // Campuri invalide
     }
@@ -688,11 +678,95 @@ void SELECT(secretariat *secretariat, char *interogare)
     free(nume_tabela);
 }
 
+
+void UPDATE_studenti(secretariat *secretariat,
+    char *camp, char *valoare,
+    int nr_conditii, conditie *conditii)
+{
+    for (int i = 0; i < secretariat->nr_studenti; i++) {
+        student *student = &secretariat->studenti[i];
+
+        if (nr_conditii > 0
+            && !match_student_on_all_conditii(*student, nr_conditii, conditii))
+            continue;
+
+        if (!strcmp(camp, "id")) {
+            student->id = atoi(valoare);
+        } else if (!strcmp(camp, "nume")) {
+            strcpy(student->nume, valoare);
+        } else if (!strcmp(camp, "statut")) {
+            if (!strlen(valoare)) return;   // Eroare
+            student->statut = valoare[0];
+        } else if (!strcmp(camp, "medie_generala")) {
+            student->medie_generala = atof(valoare);
+        } else {
+            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
+            return;
+        }
+        
+    }
+}
+
+void UPDATE_materii(secretariat *secretariat,
+    char *camp, char *valoare,
+    int nr_conditii, conditie *conditii)
+{
+    for (int i = 0; i < secretariat->nr_materii; i++) {
+        materie *materie = &secretariat->materii[i];
+
+        if (nr_conditii > 0
+            && !match_materie_on_all_conditii(*materie, nr_conditii, conditii))
+            continue;
+        
+        if (!strcmp(camp, "id")) {
+            materie->id = atoi(valoare);
+        } else if (!strcmp(camp, "nume")) {
+            strcpy(materie->nume, valoare);
+        } else if (!strcmp(camp, "nume_titular")) {
+            strcpy(materie->nume_titular, valoare);
+        } else {
+            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
+            return;
+        }
+    }
+}
+
+void UPDATE_inrolari(secretariat *secretariat,
+    char *camp, char *valoare,
+    int nr_conditii, conditie *conditii)
+{
+    for (int i = 0; i < secretariat->nr_materii; i++) {
+        inrolare *inrolare = &secretariat->inrolari[i];
+
+        if (nr_conditii > 0
+            && !match_inrolare_on_all_conditii(*inrolare, nr_conditii, conditii))
+            continue;
+
+        if (!strcmp(camp, "id_student")) {
+            inrolare->id_student = atoi(valoare);
+        } else if (!strcmp(camp, "id_materie")) {
+            inrolare->id_materie = atoi(valoare);
+        } else if (!strcmp(camp, "note")) {
+            char *token = strtok(valoare, " ");
+            inrolare->note[0] = atof(token);   // Laborator
+
+            token = strtok(NULL, " ");
+            inrolare->note[1] = atof(token);  // Examen partial
+
+            token = strtok(NULL, " ");
+            inrolare->note[2] = atof(token);  // Examen final
+        } else {
+            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
+            return;
+        }
+    }
+}
+
 /* Template:
 UPDATE <tabel> SET <camp> = <valoare> WHERE <conditie>;
 UPDATE <tabel> SET <camp> = <valoare> WHERE <cond1> AND <cond2>;
 */
-void UPDATE(char *interogare)
+void UPDATE(secretariat *secretariat, char *interogare)
 {
     char *ptr = strstr(interogare, "UPDATE");
     if (!ptr)
@@ -705,10 +779,10 @@ void UPDATE(char *interogare)
     char *endTable = strstr(ptr, "SET");
     if (!endTable) return;
 
-    char *tabel = (char *) malloc(128 * sizeof(char));
-    strncpy(tabel, ptr, endTable - ptr);
-    tabel[endTable - ptr] = '\0';
-    trim(tabel);
+    char *nume_tabela = (char *) malloc(128 * sizeof(char));
+    strncpy(nume_tabela, ptr, endTable - ptr);
+    nume_tabela[endTable - ptr] = '\0';
+    trim(nume_tabela);
 
     // Extrage partea "<camp> = <valaore>"
     ptr = endTable + strlen("SET");
@@ -733,29 +807,46 @@ void UPDATE(char *interogare)
 
     trim(camp);
     trim(valoare);
+    remove_trailing_quotation_marks(valoare);
+
 
     // Extrage conditie/conditii (TOT ce este dupa WHERE)
     ptr = endWhere + strlen("WHERE");
     while (isspace((unsigned char)*ptr)) ptr++;
-    char *conditii = (char*) malloc(256 * sizeof(char));
-    strncpy(conditii, ptr, strlen(ptr));
-    conditii[strlen(ptr)] = '\0';
-    trim(conditii);
+    char *str_conditii = (char*) malloc(256 * sizeof(char));
+    strncpy(str_conditii, ptr, strlen(ptr));
+    str_conditii[strlen(ptr)] = '\0';
+    trim(str_conditii);
 
     // Sterge ';' de la final
-    size_t len = strlen(conditii);
-    if (len > 0 && conditii[len - 1] == ';')
-        conditii[len - 1] = '\0';
+    size_t len = strlen(str_conditii);
+    if (len > 0 && str_conditii[len - 1] == ';')
+        str_conditii[len - 1] = '\0';
 
-    printf("Tabel: \"%s\"\n", tabel);
-    printf("Camp: \"%s\"\n", camp);
-    printf("Valoare: \"%s\"\n", valoare);
-    printf("Conditii: \"%s\"\n", conditii);
+    int nr_conditii = 0;
+    conditie *conditii = parseaza_conditiile_WHERE(str_conditii, &nr_conditii);
 
-    free(tabel);
+        if (!strcmp(nume_tabela, "studenti")) {
+        UPDATE_studenti(
+            secretariat,
+            camp, valoare, 
+            nr_conditii, conditii);
+    } else if (!strcmp(nume_tabela, "materii")) {
+        UPDATE_materii(
+            secretariat,
+            camp, valoare, 
+            nr_conditii, conditii);
+    } else if (!strcmp(nume_tabela, "inrolari")) {
+        UPDATE_inrolari(
+            secretariat,
+            camp, valoare, 
+            nr_conditii, conditii);
+    }
+
+    free(nume_tabela);
     free(camp);
     free(valoare);
-    free(conditii);
+    free(str_conditii);
 }
 
 
@@ -778,7 +869,7 @@ void proceseaza_interogare(secretariat *secretariat, char *interogare)
     if (strstr(interogare, "SELECT ")) {
         SELECT(secretariat, interogare);
     } else if (strstr(interogare, "UPDATE ")) {
-        // TODO
+        UPDATE(secretariat, interogare);
     } else if (strstr(interogare, "DELETE ")) {
         // TODO
     } else {

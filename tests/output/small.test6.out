@@ -1,3 +1,19 @@
+id
+id
+ nume
+nmee
+ an_studiu
+an_studiu
+ medie_generala
+medie_generala
+ statut
+statut
+bine 3
+camp[0] = "id"
+camp[1] = "nmee"
+camp[2] = "an_studiu"
+camp[3] = "medie_generala"
+camp[4] = "statut"
 0  3 7.6 t
 1  4 2.8 b
 2  1 6.2 b

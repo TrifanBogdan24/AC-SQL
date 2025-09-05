@@ -1,7 +1,25 @@
+"id" ">" "5"
+"statut" "=" "b"
+aici
+aici NU
+Camp[0] = "id"
+Camp[1] = "nume"
+bine 3
+camp[0] = "id"
+camp[1] = "nume"
+camp[2] = "an_studiu"
+camp[3] = "statut"
+camp[4] = "medie_generala"
 6 Ionescu Andrei 1 b 4.7
 7 Roman Denisa 4 b 5.2
 8 Ionescu Florentina 4 b 5.8
 9 Petrescu Florentina 3 b 6.2
+"id_materie" "=" "4"
+id_student
+id_student
+Camp[0] = "id_student"
+bine 3
+camp[0] = "id_student"
 0
 4
 5
