@@ -7,9 +7,16 @@ static inline void trim(char *str)
 {
     if (!str)
         return;
-    while (strlen(str) > 0 && isspace(str[0]))
-        strcpy(str, str + 1);
-    while (strlen(str) > 0 && isspace(str[strlen(str) - 1]))
-        str[strlen(str) - 1] = '\0';
+
+    // elimina spatiile de la inceput
+    while (*str && isspace((unsigned char)*str))
+        memmove(str, str + 1, strlen(str));
+
+    // elimina spatiile de la final
+    size_t len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1])) {
+        str[len - 1] = '\0';
+        len--;
+    }
 }
 

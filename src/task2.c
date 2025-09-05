@@ -402,14 +402,16 @@ void SELECT_FROM_studenti(secretariat *secretariat,
         for (int j = 0; j < nr_campuri; j++) {
             if (!strcmp(campuri[j], "id"))
                 printf("%d", student.id);
-            if (!strcmp(campuri[j], "nume"))
+            else if (!strcmp(campuri[j], "nume"))
                 printf("%s", student.nume);
-            if (!strcmp(campuri[j], "an_studiu"))
+            else if (!strcmp(campuri[j], "an_studiu"))
                 printf("%d", student.an_studiu);
-            if (!strcmp(campuri[j], "statut"))
+            else if (!strcmp(campuri[j], "statut"))
                 printf("%c", student.statut);
-            if (!strcmp(campuri[j], "medie_generala"))
+            else if (!strcmp(campuri[j], "medie_generala"))
                 printf("%.1f", student.medie_generala);
+            else
+                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
 
             if (j < nr_campuri - 1)
                 printf(" ");
@@ -432,11 +434,13 @@ void SELECT_FROM_materii(secretariat *secretariat,
         for (int j = 0; j < nr_campuri; j++) {
             if (!strcmp(campuri[j], "id"))
                 printf("%d", materie.id);
-            if (!strcmp(campuri[j], "nume"))
+            else if (!strcmp(campuri[j], "nume"))
                 printf("%s", materie.nume);
-            if (!strcmp(campuri[j], "nume_titular"))
+            else if (!strcmp(campuri[j], "nume_titular"))
                 printf("%s", materie.nume_titular);
-            
+            else
+                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
+
             if (j < nr_campuri - 1)
                 printf(" ");
         }
@@ -460,11 +464,13 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
         for (int j = 0; j < nr_campuri; j++) {
             if (!strcmp(campuri[j], "id_student"))
                 printf("%d", inrolare.id_student);
-            if (!strcmp(campuri[j], "id_materie"))
+            else if (!strcmp(campuri[j], "id_materie"))
                 printf("%d", inrolare.id_materie);
-            if (!strcmp(campuri[j], "note"))
+            else if (!strcmp(campuri[j], "note"))
                 printf("%.1f %.1f %.1f",
                     inrolare.note[0], inrolare.note[1], inrolare.note[2]);
+            else
+                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
 
             if (j < nr_campuri - 1)
                 printf(" ");
@@ -545,18 +551,20 @@ char **build_campuri(char *nume_tabela, int *nr_campuri)
 */
 char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri)
 {
+    *nr_campuri = 0;
     char **campuri = NULL;
-    char *token = strtok(str_conditii, ",");
 
-    (*nr_campuri) = 0;
+    char *token = strtok(str_conditii, ",");
 
     while (token) {
         (*nr_campuri)++;
-        int idx = (*nr_campuri) - 1;
-        campuri = realloc(campuri, *nr_campuri * sizeof(char*));
-        campuri[idx] = malloc(150 * sizeof(char));
+        int idx = *nr_campuri - 1;
+
+        campuri = realloc(campuri, (*nr_campuri) * sizeof(char *));
+        campuri[idx] = (char *) malloc((strlen(token) + 1) * sizeof(char));
         strcpy(campuri[idx], token);
         trim(campuri[idx]);
+
         token = strtok(NULL, ",");
     }
 
