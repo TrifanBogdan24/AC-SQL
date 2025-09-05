@@ -135,7 +135,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii)
     const char *delim = "AND";
     size_t len_delim = strlen(delim);
     char *ptr = str_conditii;
-    char *found = strstr(ptr, delim);  // prima căutare
+    char *found = strstr(ptr, delim);  // prima cautare
 
     while (found) {
         *found = '\0';
@@ -879,7 +879,7 @@ void UPDATE(secretariat *secretariat, char *interogare)
     int nr_conditii = 0;
     conditie *conditii = parseaza_conditiile_WHERE(str_conditii, &nr_conditii);
 
-        if (!strcmp(nume_tabela, "studenti")) {
+    if (!strcmp(nume_tabela, "studenti")) {
         UPDATE_studenti(
             secretariat,
             camp, valoare, 
@@ -907,6 +907,143 @@ void UPDATE(secretariat *secretariat, char *interogare)
 
 
 
+
+
+void DELETE_FROM_studenti(
+    secretariat *secretariat,
+    int nr_conditii, conditie *conditii)
+{
+    int idx = 0;
+
+    while (idx < secretariat->nr_studenti) {
+        student student = secretariat->studenti[idx];
+        if (!match_student_on_all_conditii(student, nr_conditii, conditii)) {
+            idx++;
+            continue;
+        }
+
+        // Altfel, sterg studentul cu indicele 'idx' din vector:
+        for (int i = idx; i < secretariat->nr_studenti - 1; i++)
+            secretariat->studenti[idx] = secretariat->studenti[idx + 1];
+        
+        // Redimensionez vectorul:
+        secretariat->nr_studenti -= 1;
+        secretariat->studenti = realloc(secretariat->studenti, secretariat->nr_studenti);
+    }
+}
+
+
+void DELETE_FROM_materii(
+    secretariat *secretariat,
+    int nr_conditii, conditie *conditii)
+{
+    int idx = 0;
+
+    while (idx < secretariat->nr_materii) {
+        materie materie = secretariat->materii[idx];
+        if (!match_materie_on_all_conditii(materie, nr_conditii, conditii)) {
+            idx++;
+            continue;
+        }
+
+        // Altfel, sterg materia cu indicele 'idx' din vector:
+        for (int i = idx; i < secretariat->nr_materii - 1; i++)
+            secretariat->materii[idx] = secretariat->materii[idx + 1];
+        
+        // Redimensionez vectorul:
+        secretariat->nr_materii -= 1;
+        secretariat->materii = realloc(secretariat->materii, secretariat->nr_materii);
+    }
+}
+
+
+void DELETE_FROM_inrolari(
+    secretariat *secretariat,
+    int nr_conditii, conditie *conditii)
+{
+    int idx = 0;
+
+    while (idx < secretariat->nr_inrolari) {
+        inrolare inrolare = secretariat->inrolari[idx];
+        if (!match_inrolare_on_all_conditii(inrolare, nr_conditii, conditii)) {
+            idx++;
+            continue;
+        }
+
+        // Altfel, sterg inrolarea cu indicele 'idx' din vector:
+        for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
+            secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
+        
+        // Redimensionez vectorul:
+        secretariat->nr_inrolari -= 1;
+        secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
+    }
+}
+
+
+/* Template
+DELETE FROM <tabel> WHERE <conditie>;
+DELETE FROM <tabel> WHERE <conditie1> AND <conditie2>;
+*/
+void DELETE(secretariat *secretariat, char *interogare)
+{
+    char *ptr = strstr(interogare, "DELETE FROM");
+    if (!ptr) return;
+    ptr += strlen("DELETE FROM");
+
+    // Extrage numele tabelului
+    while (isspace((unsigned char)*ptr)) ptr++;
+    char *wherePos = strstr(ptr, "WHERE");
+
+    char *nume_tabela = (char*) malloc(128 * sizeof(char));
+    if (wherePos) {
+        strncpy(nume_tabela, ptr, wherePos - ptr);
+        nume_tabela[wherePos - ptr] = '\0';
+    } else {
+        // pana la ';'
+        char *end = strchr(ptr, ';');
+        if (!end) end = ptr + strlen(ptr);
+        strncpy(nume_tabela, ptr, end - ptr);
+        nume_tabela[end - ptr] = '\0';
+    }
+    trim(nume_tabela);
+
+    // Extrage conditiile (daca exista)
+    char *str_conditii = (char*) malloc(256 * sizeof(char));
+    if (wherePos) {
+        ptr = wherePos + strlen("WHERE");
+        while (isspace((unsigned char)*ptr)) ptr++;
+        char *end = strchr(ptr, ';');
+        if (!end) end = ptr + strlen(ptr);
+        strncpy(str_conditii, ptr, end - ptr);
+        str_conditii[end - ptr] = '\0';
+        trim(str_conditii);
+    }
+
+    int nr_conditii = 0;
+    conditie *conditii = parseaza_conditiile_WHERE(str_conditii, &nr_conditii);
+
+    if (!strcmp(nume_tabela, "studenti")) {
+        DELETE_FROM_studenti(
+            secretariat,
+            nr_conditii, conditii);
+    } else if (!strcmp(nume_tabela, "materii")) {
+        DELETE_FROM_materii(
+            secretariat,
+            nr_conditii, conditii);
+    } else if (!strcmp(nume_tabela, "inrolari")) {
+        DELETE_FROM_inrolari(
+            secretariat,
+            nr_conditii, conditii);
+    }
+
+    free(nume_tabela);
+    free(str_conditii);
+    elibereaza_conditiile(nr_conditii, &conditii);
+}
+
+
+
 void proceseaza_interogare(secretariat *secretariat, char *interogare)
 {
     trim(interogare);
@@ -927,7 +1064,7 @@ void proceseaza_interogare(secretariat *secretariat, char *interogare)
     } else if (strstr(interogare, "UPDATE ")) {
         UPDATE(secretariat, interogare);
     } else if (strstr(interogare, "DELETE ")) {
-        // TODO
+        DELETE(secretariat, interogare);
     } else {
         fprintf(stderr, "[EROARE] Interogare invalida!\n");
     }
