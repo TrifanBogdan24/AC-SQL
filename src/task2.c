@@ -1,6 +1,7 @@
 #include "task2.h"
+#include "task1.h"
 #include "trim.h"
-
+#include <math.h>
 
 typedef struct {
     char *camp;
@@ -8,6 +9,34 @@ typedef struct {
     char *valoare;
 } conditie;
 
+/* Elibereaza memoria alocata vectorului */
+void elibereaza_conditiile(int nr_conditii, conditie **conditii)
+{
+    if (!conditii || !(*conditii)) return;
+
+    for (int i = 0; i < nr_conditii; i++) {
+        if ((*conditii)[i].camp)
+            free((*conditii)[i].camp);
+        if ((*conditii)[i].op_comp)
+            free((*conditii)[i].op_comp);
+        if ((*conditii)[i].valoare)
+            free((*conditii)[i].valoare);
+        
+    }
+
+    free(*conditii);
+}
+
+/* Elibereaza memoria alocata matricii (array de string-uri) */
+void elibereaza_strings(int nr_strings, char ***strings)
+{
+    if (!strings || !(*strings)) return;
+
+    for (int i = 0; i < nr_strings; i++)
+        if ((*strings)[i]) free((*strings)[i]);
+
+    free(*strings);
+}
 
 
 /*
@@ -175,6 +204,7 @@ conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii)
         remove_trailing_quotation_marks(conditie->valoare);
     }
 
+    elibereaza_strings(*nr_conditii, &conditii_strings);
     return conditii;
 }
 
@@ -361,7 +391,7 @@ int match_inrolare_on_conditie(inrolare inrolare, conditie cond)
             return (nota_laborator == inrolare.note[0]
             && nota_partial == inrolare.note[1]
             && nota_final == inrolare.note[2]);
-        else if (!strcmp(cond.op_comp, "="))
+        if (!strcmp(cond.op_comp, "!="))
             return (nota_laborator != inrolare.note[0]
             || nota_partial != inrolare.note[1]
             || nota_final != inrolare.note[2]);
@@ -432,10 +462,10 @@ void SELECT_FROM_studenti(secretariat *secretariat,
                 printf("%d", student.an_studiu);
             else if (!strcmp(campuri[j], "statut"))
                 printf("%c", student.statut);
-            else if (!strcmp(campuri[j], "medie_generala"))
-                printf("%.2f", student.medie_generala);
-            else
-                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
+            else if (!strcmp(campuri[j], "medie_generala")) {
+                // Rotunjire in sus la 2 zecimale:
+                printf("%.2f", ceil(student.medie_generala * 100) / 100);
+            }
 
             if (j < nr_campuri - 1)
                 printf(" ");
@@ -462,8 +492,6 @@ void SELECT_FROM_materii(secretariat *secretariat,
                 printf("%s", materie.nume);
             else if (!strcmp(campuri[j], "nume_titular"))
                 printf("%s", materie.nume_titular);
-            else
-                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
 
             if (j < nr_campuri - 1)
                 printf(" ");
@@ -493,8 +521,6 @@ void SELECT_FROM_inrolari(secretariat *secretariat,
             else if (!strcmp(campuri[j], "note"))
                 printf("%.2f %.2f %.2f",
                     inrolare.note[0], inrolare.note[1], inrolare.note[2]);
-            else
-                fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!\n", campuri[j]);
 
             if (j < nr_campuri - 1)
                 printf(" ");
@@ -703,11 +729,12 @@ void SELECT(secretariat *secretariat, char *interogare)
     }
 
 
-    free(campuri);
-    free(conditii);
     free(str_campuri);
     free(str_conditii);
     free(nume_tabela);
+
+    elibereaza_strings(nr_campuri, &campuri);
+    elibereaza_conditiile(nr_conditii, &conditii);
 }
 
 
@@ -731,9 +758,6 @@ void UPDATE_studenti(secretariat *secretariat,
             student->statut = valoare[0];
         } else if (!strcmp(camp, "medie_generala")) {
             student->medie_generala = atof(valoare);
-        } else {
-            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
-            return;
         }
         
     }
@@ -756,9 +780,6 @@ void UPDATE_materii(secretariat *secretariat,
             strcpy(materie->nume, valoare);
         } else if (!strcmp(camp, "nume_titular")) {
             strcpy(materie->nume_titular, valoare);
-        } else {
-            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
-            return;
         }
     }
 }
@@ -787,9 +808,9 @@ void UPDATE_inrolari(secretariat *secretariat,
 
             token = strtok(NULL, " ");
             inrolare->note[2] = atof(token);  // Examen final
-        } else {
-            fprintf(stderr, "\n[EROARE] Camp invalid \"%s\"!", camp);
-            return;
+
+            // Updateaza mediile
+            calculeaza_medii_generale(secretariat);
         }
     }
 }
@@ -879,6 +900,8 @@ void UPDATE(secretariat *secretariat, char *interogare)
     free(camp);
     free(valoare);
     free(str_conditii);
+
+    elibereaza_conditiile(nr_conditii, &conditii);
 }
 
 
@@ -937,5 +960,7 @@ int main(int argc, char *argv[]) {
     }
 
     elibereaza_secretariat(&secretariat);
+
+    free(linie);
     return 0;
 }
