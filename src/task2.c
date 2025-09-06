@@ -899,6 +899,7 @@ void DELETE_FROM_inrolari(
             continue;
         }
 
+
         // Altfel, sterg inrolarea cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
             secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
@@ -964,6 +965,10 @@ void DELETE_FROM_materii(
         // Altfel, sterg materia cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_materii - 1; i++)
             secretariat->materii[idx] = secretariat->materii[idx + 1];
+
+        int idx_last = secretariat->nr_materii - 1;
+        free(secretariat->materii[idx_last].nume);
+        free(secretariat->materii[idx_last].nume_titular);
 
         secretariat->nr_materii -= 1;
         if (secretariat->nr_materii == 0) {
