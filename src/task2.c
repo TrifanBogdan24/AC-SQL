@@ -1,6 +1,7 @@
 #include <math.h>
-#include "task2.h"
 #include "task1.h"
+#include "task2.h"
+#include "task3.h"
 #include "trim.h"
 #include "die.h"
 
@@ -907,9 +908,6 @@ void DELETE_FROM_inrolari(
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
             secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
 
-        int nr_conditii_delete = 1;
-
-
         secretariat->nr_inrolari -= 1;
         if (secretariat->nr_inrolari == 0) {
             // Vectorul nu mai contine niciun element, ii eliberez memoria:
@@ -1127,6 +1125,12 @@ int main(int argc, char *argv[]) {
     }
 
     secretariat *secretariat = citeste_secretariat(argv[1]);
+    /* snippet criptare:
+    char *iv = "ab";
+    char *key = "pclp1";
+    cripteaza_studenti(secretariat, (void*)key, strlen(key), (void*)iv, strlen(iv), "fisier.acs");
+    return 0;
+    */
 
     int nr_interogari = 0;
 
