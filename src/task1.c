@@ -4,6 +4,7 @@
 
 #include "task1.h"
 #include "trim.h"
+#include "die.h"
 
 #define BUFFER_LENGTH 256
 #define SEP         ",;"
@@ -16,15 +17,6 @@ typedef enum {
     TABELA_INROLARI,
     NONE
 } Table;
-
-
-void DIE(int condition, char *error_message) {
-    if (!condition)
-        return;
-    fprintf(stderr, "%s", error_message);
-    exit(EXIT_FAILURE);
-}
-
 
 
 void print_student(student student) {
@@ -145,6 +137,7 @@ void adauga_student(secretariat *s, int id, char *nume, int an_studiu, char stat
     s->nr_studenti += 1;
 
     s->studenti = realloc(s->studenti, s->nr_studenti * sizeof(student));
+    DIE(s->studenti == NULL, "realloc: nu s-a putut redimensiona vectorul studentilor.\n");
 
     student student;
     student.id = id;
@@ -159,12 +152,14 @@ void adauga_student(secretariat *s, int id, char *nume, int an_studiu, char stat
 void adauga_materie(secretariat *s, materie materie) {
     s->nr_materii += 1;
     s->materii = realloc(s->materii, s->nr_materii * sizeof(materie));
+    DIE(s->materii == NULL, "realloc: nu s-a putut redimensiona vectorul materiilor.\n");
     s->materii[s->nr_materii - 1] = materie;
 }
 
 void adauga_inrolare(secretariat *s, inrolare inrolare) {
     s->nr_inrolari += 1;
     s->inrolari = realloc(s->inrolari, s->nr_inrolari * sizeof(inrolare));
+    DIE(s->inrolari == NULL, "realloc: nu s-a putut redimensiona vectorul inrolarilor.\n");
     s->inrolari[s->nr_inrolari - 1] = inrolare;
 }
 

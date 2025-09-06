@@ -2,6 +2,7 @@
 #include "task2.h"
 #include "task1.h"
 #include "trim.h"
+#include "die.h"
 
 #define ONE_HUNDRED   100
 #define BUFFER_LENGTH 256
@@ -141,6 +142,8 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
 
         (*nr_conditii)++;
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
+        DIE(conditii_strings == NULL, "realloc: nu s-a putut redimensiona array-ul de string-uri pentru conditii\n");
+
         int idx = (*nr_conditii) - 1;
         conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
         snprintf(conditii_strings[idx], BUFFER_LENGTH, "%s", ptr);
@@ -153,6 +156,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
     if (*ptr != '\0') {
         (*nr_conditii)++;
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
+        DIE(conditii_strings == NULL, "realloc: nu s-a putut redimensiona array-ul de string-uri pentru conditii\n");
         int idx = (*nr_conditii) - 1;
         conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
         snprintf(conditii_strings[idx], BUFFER_LENGTH, "%s", ptr);
@@ -592,6 +596,8 @@ char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri) {
         int idx = *nr_campuri - 1;
 
         campuri = realloc(campuri, (*nr_campuri) * sizeof(char *));
+        DIE(campuri == NULL, "realloc: nu s-a putu redimensiona vectorul campurilor selectate\n");
+
         campuri[idx] = (char *) malloc((strlen(token) + 1) * sizeof(char));
         snprintf(campuri[idx], BUFFER_LENGTH, "%s", token);
         trim(campuri[idx]);
@@ -900,6 +906,7 @@ void DELETE_FROM_inrolari(
         // Redimensionez vectorul:
         secretariat->nr_inrolari -= 1;
         secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
+        DIE(secretariat->inrolari == NULL, "realloc: nu s-a putut redimensiona vectorul inrolarilor.\n");
     }
 }
 
@@ -925,6 +932,7 @@ void DELETE_FROM_studenti(
         // Redimensionez vectorul:
         secretariat->nr_studenti -= 1;
         secretariat->studenti = realloc(secretariat->studenti, secretariat->nr_studenti);
+        DIE(secretariat->studenti == NULL, "realloc: nu s-a putut redimensiona vectorul studentilor.\n");
     }
 }
 
@@ -948,6 +956,7 @@ void DELETE_FROM_materii(
         // Redimensionez vectorul:
         secretariat->nr_materii -= 1;
         secretariat->materii = realloc(secretariat->materii, secretariat->nr_materii);
+        DIE(secretariat->materii == NULL, "realloc: nu s-a putut redimensiona vectorul materiilor.\n");
     }
 }
 
@@ -1064,7 +1073,7 @@ int main(int argc, char *argv[]) {
         fgets(linie, BUFFER_LENGTH, stdin);
 
         // Inlocuieste new-line ('\n') cu NULL terminator ('\0'):
-        if (linie[strlen(linie) - 1] == '\n') 
+        if (linie[strlen(linie) - 1] == '\n')
             linie[strlen(linie) - 1] = '\0';
 
         proceseaza_interogare(secretariat, linie);
