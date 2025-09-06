@@ -903,10 +903,17 @@ void DELETE_FROM_inrolari(
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
             secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
 
-        // Redimensionez vectorul:
         secretariat->nr_inrolari -= 1;
-        secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari);
-        DIE(secretariat->inrolari == NULL, "realloc: nu s-a putut redimensiona vectorul inrolarilor.\n");
+        if (secretariat->nr_inrolari == 0) {
+            // Vectorul nu mai contine niciun element, ii eliberez memoria:
+            free(secretariat->inrolari);
+            secretariat->inrolari = NULL;
+        } else {
+            // Redimensionez vectorul:
+            secretariat->inrolari = realloc(secretariat->inrolari, secretariat->nr_inrolari * sizeof(inrolare));
+            DIE(secretariat->nr_inrolari > 0 && secretariat->inrolari == NULL,
+                "realloc: nu s-a putut redimensiona vectorul inrolarilor.\n");
+        }
     }
 }
 
@@ -923,16 +930,21 @@ void DELETE_FROM_studenti(
             continue;
         }
 
-        printf("Sterge studentul cu ID = %d\n", student.id);
-
         // Altfel, sterg studentul cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_studenti - 1; i++)
             secretariat->studenti[idx] = secretariat->studenti[idx + 1];
 
-        // Redimensionez vectorul:
         secretariat->nr_studenti -= 1;
-        secretariat->studenti = realloc(secretariat->studenti, secretariat->nr_studenti);
-        DIE(secretariat->studenti == NULL, "realloc: nu s-a putut redimensiona vectorul studentilor.\n");
+        if (secretariat->nr_studenti == 0) {
+            // Vectorul nu mai contine niciun element, ii eliberez memoria:
+            free(secretariat->studenti);
+            secretariat->studenti = NULL;
+        } else {
+            // Redimensionez vectorul:
+            secretariat->studenti = realloc(secretariat->studenti, secretariat->nr_studenti * sizeof(student));
+            DIE(secretariat->nr_studenti > 0 && secretariat->studenti == NULL,
+                "realloc: nu s-a putut redimensiona vectorul studentilor.\n");
+        }
     }
 }
 
@@ -953,10 +965,17 @@ void DELETE_FROM_materii(
         for (int i = idx; i < secretariat->nr_materii - 1; i++)
             secretariat->materii[idx] = secretariat->materii[idx + 1];
 
-        // Redimensionez vectorul:
         secretariat->nr_materii -= 1;
-        secretariat->materii = realloc(secretariat->materii, secretariat->nr_materii);
-        DIE(secretariat->materii == NULL, "realloc: nu s-a putut redimensiona vectorul materiilor.\n");
+        if (secretariat->nr_materii == 0) {
+            // Vectorul nu mai contine niciun element, ii eliberez memoria:
+            free(secretariat->materii);
+            secretariat->materii = NULL;
+        } else {
+            // Redimensionez vectorul:
+            secretariat->materii = realloc(secretariat->materii, secretariat->nr_materii * sizeof(materie));
+            DIE(secretariat->nr_materii > 0 && secretariat->materii == NULL,
+                "realloc: nu s-a putut redimensiona vectorul materiilor.\n");
+        }
     }
 }
 
