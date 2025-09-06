@@ -142,7 +142,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
         conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
-        strcpy(conditii_strings[idx], ptr);
+        snprintf(conditii_strings[idx], BUFFER_LENGTH, "%s", ptr);
 
         ptr = found + len_delim;
         found = strstr(ptr, delim);
@@ -154,7 +154,7 @@ char **split_conditii_into_strings(char *str_conditii, int *nr_conditii) {
         conditii_strings = realloc(conditii_strings, *nr_conditii * sizeof(char*));
         int idx = (*nr_conditii) - 1;
         conditii_strings[idx] = malloc(BUFFER_LENGTH * sizeof(char));
-        strcpy(conditii_strings[idx], ptr);
+        snprintf(conditii_strings[idx], BUFFER_LENGTH, "%s", ptr);
     }
 
     return conditii_strings;
@@ -188,15 +188,15 @@ conditie *parseaza_conditiile_WHERE(char *str_conditii, int *nr_conditii) {
         conditie->valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
 
         char *token = strtok(conditii_strings[i], " ");
-        strcpy(conditie->camp, token);
+        snprintf(conditie->camp, BUFFER_LENGTH, "%s", token);
         trim(conditie->camp);
 
         token = strtok(NULL, " ");
-        strcpy(conditie->op_comp, token);
+        snprintf(conditie->op_comp, BUFFER_LENGTH, "%s", token);
         trim(conditie->op_comp);
 
         token = strtok(NULL, "");
-        strcpy(conditie->valoare, token);
+        snprintf(conditie->valoare, BUFFER_LENGTH, "%s", token);
         trim(conditie->valoare);
         remove_trailing_quotation_marks(conditie->valoare);
     }
@@ -592,7 +592,7 @@ char **parseaza_campurile_SELECT(char *str_conditii, int *nr_campuri) {
 
         campuri = realloc(campuri, (*nr_campuri) * sizeof(char *));
         campuri[idx] = (char *) malloc((strlen(token) + 1) * sizeof(char));
-        strcpy(campuri[idx], token);
+        snprintf(campuri[idx], BUFFER_LENGTH, "%s", token);
         trim(campuri[idx]);
 
         token = strtok(NULL, ",");
@@ -730,7 +730,7 @@ void UPDATE_studenti(secretariat *secretariat,
         if (!strcmp(camp, "id")) {
             student->id = atoi(valoare);
         } else if (!strcmp(camp, "nume")) {
-            strcpy(student->nume, valoare);
+            snprintf(student->nume, BUFFER_LENGTH, "%s", valoare);
         } else if (!strcmp(camp, "statut")) {
             if (!strlen(valoare)) return;   // Eroare
             student->statut = valoare[0];
@@ -753,9 +753,9 @@ void UPDATE_materii(secretariat *secretariat,
         if (!strcmp(camp, "id")) {
             materie->id = atoi(valoare);
         } else if (!strcmp(camp, "nume")) {
-            strcpy(materie->nume, valoare);
+            snprintf(materie->nume, MAX_STUDENT_NAME, "%s", valoare);
         } else if (!strcmp(camp, "nume_titular")) {
-            strcpy(materie->nume_titular, valoare);
+            snprintf(materie->nume_titular, BUFFER_LENGTH, "%s", valoare);
         }
     }
 }
@@ -830,7 +830,7 @@ void UPDATE(secretariat *secretariat, char *interogare) {
     char *valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     strncpy(camp, campValoare, eq - campValoare);
     camp[eq - campValoare] = '\0';
-    strcpy(valoare, eq + 1);
+    snprintf(valoare, BUFFER_LENGTH, "%s", eq + 1);
 
     trim(camp);
     trim(valoare);

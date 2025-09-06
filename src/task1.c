@@ -104,7 +104,7 @@ materie parseaza_intrare_materie(char *linie) {
     DIE(token == NULL, "Fisierul .db nu respecta formatul dorit!\n");
     materie.nume_titular = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     trim(token);
-    snprintf(materie.nume_titular, sizeof(materie.nume_titular), "%s", token);
+    snprintf(materie.nume_titular, BUFFER_LENGTH, "%s", token);
 
     return materie;
 }
@@ -228,13 +228,13 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
         } else {
             switch (table) {
             case TABELA_STUDENTI:
-                student stud =
+                student student =
                     parseaza_intrare_student(linie);
                 /* Pentru debugging: print_student(student); */
                 adauga_student(
                     s,
-                    stud.id, stud.nume, stud.an_studiu,
-                    stud.statut, stud.medie_generala);
+                    student.id, student.nume, student.an_studiu,
+                    student.statut, student.medie_generala);
                 break;
 
             case TABELA_MATERII:
