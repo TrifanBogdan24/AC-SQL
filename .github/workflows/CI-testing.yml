@@ -1,0 +1,44 @@
+name: Run Tests on Implementation
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (G++, Valgrind, Python3, cpplint)
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential valgrind python3
+          pip3 install --user cpplint
+
+      - name: Setup
+        run: |
+            chmod +x setup.sh
+            sudo ./setup.sh
+
+      - name: Compile
+        run: make 2>&1 | tee compile_info.txt
+
+      - name: Run tests (implementation & coding style)
+        run: python3 checker.py 2>&1 | tee test_results.txt
+
+      - name: Upload test logs as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checker-logs
+          path: |
+            compile_info.txt
+            test_results.txt
+            # Without `*` globbing, folders files will not be uploaded
+            tests/output/*
+          retention-days: 7
