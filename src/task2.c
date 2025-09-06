@@ -791,7 +791,7 @@ void UPDATE_inrolari(secretariat *secretariat,
             token = strtok(NULL, " ");
             inrolare->note[2] = (float) atof(token);  // Examen final
 
-            // Updateaza mediile
+            // Updateaza mediile:
             calculeaza_medii_generale(secretariat);
         }
     }
@@ -887,10 +887,13 @@ void UPDATE(secretariat *secretariat, char *interogare) {
 }
 
 
+
+
 void DELETE_FROM_inrolari(
     secretariat *secretariat,
     int nr_conditii, conditie *conditii) {
     int idx = 0;
+
 
     while (idx < secretariat->nr_inrolari) {
         inrolare inrolare = secretariat->inrolari[idx];
@@ -904,6 +907,9 @@ void DELETE_FROM_inrolari(
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
             secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
 
+        int nr_conditii_delete = 1;
+
+
         secretariat->nr_inrolari -= 1;
         if (secretariat->nr_inrolari == 0) {
             // Vectorul nu mai contine niciun element, ii eliberez memoria:
@@ -916,8 +922,36 @@ void DELETE_FROM_inrolari(
                 "realloc: nu s-a putut redimensiona vectorul inrolarilor.\n");
         }
     }
+
+    // Updateaza mediile:
+    calculeaza_medii_generale(secretariat);
 }
 
+
+void DELETE_FROM_inrolari_by_id(secretariat *secretariat, char *id_type, int id) {
+    conditie conditie;
+
+    if (!id_type) return;
+    if (strcmp(id_type, "id_student") && strcmp(id_type, "id_meterie")) {
+        fprintf(stderr, "[EROARE] Tip de ID invalid \"%s\"\n", id_type);
+        printf("[INFO] Valori valide pentru id_type: \"id_student\" SAU \"id_materie\"\n");
+        return;
+    }
+
+    conditie.camp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+    conditie.op_comp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+    conditie.valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
+
+    /* DELETE FROM inrolari WHERE id_student/materie = id  */
+    snprintf(conditie.camp, BUFFER_LENGTH, "%s", id_type);
+    snprintf(conditie.op_comp, BUFFER_LENGTH, "%s", "=");
+    snprintf(conditie.valoare, BUFFER_LENGTH, "%d", id);
+    DELETE_FROM_inrolari(secretariat, 1, &conditie);
+
+    free(conditie.camp);
+    free(conditie.op_comp);
+    free(conditie.valoare);
+}
 
 void DELETE_FROM_studenti(
     secretariat *secretariat,
@@ -931,7 +965,11 @@ void DELETE_FROM_studenti(
             continue;
         }
 
-        // Altfel, sterg studentul cu indicele 'idx' din vector:
+        /* DELETE FROM inrolari WHERE id_student = student[idx].id  */
+        DELETE_FROM_inrolari_by_id(secretariat, "id_student", secretariat->studenti[idx].id);
+
+
+        // Sterg studentul cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_studenti - 1; i++)
             secretariat->studenti[idx] = secretariat->studenti[idx + 1];
 
@@ -962,7 +1000,11 @@ void DELETE_FROM_materii(
             continue;
         }
 
-        // Altfel, sterg materia cu indicele 'idx' din vector:
+        /* DELETE FROM inrolari WHERE id_materie = materii[idx].id  */
+        DELETE_FROM_inrolari_by_id(secretariat, "id_materie", secretariat->materii[idx].id);
+
+
+        // Sterg materia cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_materii - 1; i++)
             secretariat->materii[idx] = secretariat->materii[idx + 1];
 
