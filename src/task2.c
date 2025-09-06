@@ -1064,7 +1064,8 @@ int main(int argc, char *argv[]) {
         fgets(linie, BUFFER_LENGTH, stdin);
 
         // Inlocuieste new-line ('\n') cu NULL terminator ('\0'):
-        linie[strlen(linie) - 1] = '\0';
+        if (linie[strlen(linie) - 1] == '\n') 
+            linie[strlen(linie) - 1] = '\0';
 
         proceseaza_interogare(secretariat, linie);
     }
