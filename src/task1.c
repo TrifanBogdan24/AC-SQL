@@ -226,8 +226,9 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
             // Incepe citirea din tabela "INROLARI"
             table = TABELA_INROLARI;
         } else {
-            switch (table) {
-            case TABELA_STUDENTI:
+            /* Daca se foloseste match in loc de if-else, clang-tidy va afisa erori */
+
+            if (table == TABELA_STUDENTI) {
                 student student =
                     parseaza_intrare_student(linie);
                 /* Pentru debugging: print_student(student); */
@@ -235,22 +236,14 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
                     s,
                     student.id, student.nume, student.an_studiu,
                     student.statut, student.medie_generala);
-                break;
-
-            case TABELA_MATERII:
+            } else if (table == TABELA_MATERII) {
                 materie materie = parseaza_intrare_materie(linie);
                 /* Pentru debugging: print_materie(materie); */
                 adauga_materie(s, materie);
-                break;
-
-            case TABELA_INROLARI:
+            } else if (table == TABELA_INROLARI) {
                 inrolare inrolare = parseaza_intrare_inrolare(linie);
                 /* Pentru debugging: print_inrolare(inrolare); */
                 adauga_inrolare(s, inrolare);
-                break;
-
-            default:
-                break;
             }
         }
     }
