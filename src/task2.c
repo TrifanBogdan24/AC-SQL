@@ -17,6 +17,12 @@ typedef struct {
     char *valoare;
 } conditie;
 
+typedef enum {
+    ID_STUDENT,
+    ID_MATERIE
+} id_type;
+
+
 /* Elibereaza memoria alocata vectorului */
 void elibereaza_conditiile(int nr_conditii, conditie **conditii) {
     if (!conditii || !(*conditii)) return;
@@ -926,22 +932,19 @@ void DELETE_FROM_inrolari(
 }
 
 
-void DELETE_FROM_inrolari_by_id(secretariat *secretariat, char *id_type, int id) {
+void DELETE_FROM_inrolari_by_id(secretariat *secretariat, id_type type, int id) {
     conditie conditie;
-
-    if (!id_type) return;
-    if (strcmp(id_type, "id_student") && strcmp(id_type, "id_meterie")) {
-        fprintf(stderr, "[EROARE] Tip de ID invalid \"%s\"\n", id_type);
-        printf("[INFO] Valori valide pentru id_type: \"id_student\" SAU \"id_materie\"\n");
-        return;
-    }
 
     conditie.camp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     conditie.op_comp = (char *) malloc(BUFFER_LENGTH * sizeof(char));
     conditie.valoare = (char *) malloc(BUFFER_LENGTH * sizeof(char));
 
     /* DELETE FROM inrolari WHERE id_student/materie = id  */
-    snprintf(conditie.camp, BUFFER_LENGTH, "%s", id_type);
+    if (type == ID_STUDENT)
+        snprintf(conditie.camp, BUFFER_LENGTH, "%s", "id_student");
+    else if (type == ID_MATERIE)
+        snprintf(conditie.camp, BUFFER_LENGTH, "%s", "id_materie");
+
     snprintf(conditie.op_comp, BUFFER_LENGTH, "%s", "=");
     snprintf(conditie.valoare, BUFFER_LENGTH, "%d", id);
     DELETE_FROM_inrolari(secretariat, 1, &conditie);
@@ -964,7 +967,7 @@ void DELETE_FROM_studenti(
         }
 
         /* DELETE FROM inrolari WHERE id_student = student[idx].id  */
-        DELETE_FROM_inrolari_by_id(secretariat, "id_student", secretariat->studenti[idx].id);
+        DELETE_FROM_inrolari_by_id(secretariat, ID_STUDENT, secretariat->studenti[idx].id);
 
 
         // Sterg studentul cu indicele 'idx' din vector:
@@ -999,7 +1002,7 @@ void DELETE_FROM_materii(
         }
 
         /* DELETE FROM inrolari WHERE id_materie = materii[idx].id  */
-        DELETE_FROM_inrolari_by_id(secretariat, "id_materie", secretariat->materii[idx].id);
+        DELETE_FROM_inrolari_by_id(secretariat, ID_MATERIE, secretariat->materii[idx].id);
 
 
         // Sterg materia cu indicele 'idx' din vector:
