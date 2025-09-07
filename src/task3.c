@@ -63,9 +63,27 @@ void cripteaza_studenti(secretariat *secretariat, void *key, size_t key_len,
     /* Pentru debugging: printf("Key: %s\n", key_str); */
 
 
-    /*  Padding + imparte in 4 blocuri */
+    /* Transforma vectorul  de studenti intr-un array de bytes */
+    size_t nr_bytes_sruct_student =
+        sizeof(int)
+        + MAX_STUDENT_NAME * sizeof(char)
+        + sizeof(int) + sizeof(char) + sizeof(float);
 
-    size_t length = secretariat->nr_studenti * sizeof(struct student);
+    size_t length = secretariat->nr_studenti * nr_bytes_sruct_student;
+
+    unsigned char *bytes_studenti = calloc(length, 1);
+    unsigned char *p = bytes_studenti;
+
+    for (int i = 0; i < secretariat->nr_studenti; i++) {
+        student st = secretariat->studenti[i];
+        memcpy(p, &st.id, sizeof(int)); p += sizeof(int);
+        memcpy(p, st.nume, MAX_STUDENT_NAME); p += MAX_STUDENT_NAME;
+        memcpy(p, &st.an_studiu, sizeof(int)); p += sizeof(int);
+        memcpy(p, &st.statut, sizeof(char)); p += sizeof(char);
+        memcpy(p, &st.medie_generala, sizeof(float)); p += sizeof(float);
+    }
+
+    /*  Padding + imparte in 4 blocuri */
     size_t padding = 0;
     while ((length + padding) % 4 != 0)
         padding++;
@@ -73,19 +91,23 @@ void cripteaza_studenti(secretariat *secretariat, void *key, size_t key_len,
     size_t total_length = length + padding;
     size_t block_length = total_length / 4;
 
+
     unsigned char **blocks = malloc(NR_BLOCKS * sizeof(unsigned char *));
+
 
     for (int i = 0; i < NR_BLOCKS; i++) {
         // Aloca memorie si initializa cu 0 (0x00):
         blocks[i] = calloc(block_length, sizeof(unsigned char));
 
         if (i < NR_BLOCKS - 1) {
-            memcpy(blocks[i], secretariat->studenti + i * 4, block_length);
+            memcpy(blocks[i], bytes_studenti + i * block_length, block_length);
         } else {
             // Copiaza doar lungimea blocului ramas:
-            memcpy(blocks[i], secretariat->studenti + i * 4, length - 3 * block_length);
+            memcpy(blocks[i], bytes_studenti + i * block_length, length - 3 * block_length);
         }
     }
+
+    free(bytes_studenti);
 
 
     /* Criptarea primului bloc: XOR(blocks[0], IV) */
