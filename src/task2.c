@@ -1004,16 +1004,17 @@ void DELETE_FROM_materii(
         /* DELETE FROM inrolari WHERE id_materie = materii[idx].id  */
         DELETE_FROM_inrolari_by_id(secretariat, ID_MATERIE, secretariat->materii[idx].id);
 
-
         // Sterg materia cu indicele 'idx' din vector:
-        for (int i = idx; i < secretariat->nr_materii - 1; i++)
-            secretariat->materii[idx] = secretariat->materii[idx + 1];
+        free(secretariat->materii[idx].nume);
+        free(secretariat->materii[idx].nume_titular);
+        // Sterg materia cu indicele 'idx', shiftand la stanga vectorul in memorie:
+        memmove(&secretariat->materii[idx],
+            &secretariat->materii[idx + 1],
+            (secretariat->nr_materii - idx - 1) * sizeof(materie));
 
-        int idx_last = secretariat->nr_materii - 1;
-        free(secretariat->materii[idx_last].nume);
-        free(secretariat->materii[idx_last].nume_titular);
 
-        secretariat->nr_materii -= 1;
+
+        secretariat->nr_materii--;
         if (secretariat->nr_materii == 0) {
             // Vectorul nu mai contine niciun element, ii eliberez memoria:
             free(secretariat->materii);
