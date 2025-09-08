@@ -1,4 +1,4 @@
-# 🚀 AC SQL
+# ⛃ AC SQL
 
 Un mic experiment de SQL făcut de la zero, în C.  
 Am construit o bază de date pentru o facultate (studenți, materii, înscrieri) și un interpretor care înțelege comenzi,
