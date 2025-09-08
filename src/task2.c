@@ -757,6 +757,8 @@ void UPDATE_studenti(secretariat *secretariat,
             student->id = atoi(valoare);
         } else if (!strcmp(camp, "nume")) {
             snprintf(student->nume, BUFFER_LENGTH, "%s", valoare);
+        } else if (!strcmp(camp, "an_studiu")) {
+            student->an_studiu = atoi(valoare);
         } else if (!strcmp(camp, "statut")) {
             if (!strlen(valoare)) return;   // Eroare
             student->statut = valoare[0];
