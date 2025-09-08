@@ -777,6 +777,22 @@ void UPDATE_materii(secretariat *secretariat,
 void UPDATE_inrolari(secretariat *secretariat,
     char *camp, char *valoare,
     int nr_conditii, conditie *conditii) {
+    float nota_laborator = 0.0f;
+    float nota_examen_partial = 0.0f;
+    float nota_examen_final = 0.0f;
+
+
+    if (!strcmp(camp, "note")) {
+        char *token = strtok(valoare, " ");
+        nota_laborator = (float) atof(token);
+
+        token = strtok(NULL, " ");
+        nota_examen_partial = (float) atof(token);
+
+        token = strtok(NULL, " ");
+        nota_examen_final = (float) atof(token);
+    }
+
     for (int i = 0; i < secretariat->nr_inrolari; i++) {
         inrolare *inrolare = &secretariat->inrolari[i];
 
@@ -789,14 +805,10 @@ void UPDATE_inrolari(secretariat *secretariat,
         } else if (!strcmp(camp, "id_materie")) {
             inrolare->id_materie = atoi(valoare);
         } else if (!strcmp(camp, "note")) {
-            char *token = strtok(valoare, " ");
-            inrolare->note[0] = (float) atof(token);   // Laborator
+            inrolare->note[0] = nota_laborator;
+            inrolare->note[1] = nota_examen_partial;
+            inrolare->note[2] = nota_examen_final;
 
-            token = strtok(NULL, " ");
-            inrolare->note[1] = (float) atof(token);  // Examen partial
-
-            token = strtok(NULL, " ");
-            inrolare->note[2] = (float) atof(token);  // Examen final
 
             // Updateaza mediile:
             calculeaza_medii_generale(secretariat);
@@ -912,7 +924,7 @@ void DELETE_FROM_inrolari(
 
         // Altfel, sterg inrolarea cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_inrolari - 1; i++)
-            secretariat->inrolari[idx] = secretariat->inrolari[idx + 1];
+            secretariat->inrolari[i] = secretariat->inrolari[i + 1];
 
         secretariat->nr_inrolari -= 1;
         if (secretariat->nr_inrolari == 0) {
@@ -972,7 +984,7 @@ void DELETE_FROM_studenti(
 
         // Sterg studentul cu indicele 'idx' din vector:
         for (int i = idx; i < secretariat->nr_studenti - 1; i++)
-            secretariat->studenti[idx] = secretariat->studenti[idx + 1];
+            secretariat->studenti[i] = secretariat->studenti[i + 1];
 
         secretariat->nr_studenti -= 1;
         if (secretariat->nr_studenti == 0) {
