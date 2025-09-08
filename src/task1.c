@@ -203,7 +203,8 @@ secretariat *citeste_secretariat(const char *nume_fisier) {
 
     while (!feof(fin)) {
         fgets(linie, BUFFER_LENGTH, fin);
-        linie[strlen(linie) - 1] = '\0';
+        if (linie[strlen(linie) - 1] == '\n')
+            linie[strlen(linie) - 1] = '\0';
         trim(linie);
 
         if (!strlen(linie)) {
