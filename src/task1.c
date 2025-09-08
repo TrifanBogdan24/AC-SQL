@@ -181,7 +181,10 @@ void calculeaza_medii_generale(secretariat *s) {
             idx_inrolare++;
         }
 
-        s->studenti[i].medie_generala = suma_notelor / (float)nr_materii;
+        if (nr_materii == 0)
+            s->studenti[i].medie_generala = 0.0f;
+        else
+            s->studenti[i].medie_generala = suma_notelor / (float)nr_materii;
     }
 }
 
