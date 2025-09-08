@@ -5,7 +5,9 @@
 #include "trim.h"
 #include "die.h"
 
-#define ONE_HUNDRED   100
+#define FIVE          5.0f
+#define TEN           10.0f
+#define ONE_HUNDRED   100.0f
 #define BUFFER_LENGTH 256
 #define NR_CAMPURI_TABELA_STUDENT   5
 #define NR_CAMPURI_TABELA_MATERIE   3
@@ -464,8 +466,18 @@ void SELECT_FROM_studenti(secretariat *secretariat,
             } else if (!strcmp(campuri[j], "statut")) {
                 printf("%c", student.statut);
             } else if (!strcmp(campuri[j], "medie_generala")) {
-                // Rotunjire in sus la 2 zecimale:
-                printf("%.2f", ceil(student.medie_generala * ONE_HUNDRED) / ONE_HUNDRED);
+                // Rotunjire la 2 zecimale:
+                float temp = student.medie_generala * ONE_HUNDRED;
+                int intPart = (int)temp;
+                float thirdDecimal = (temp - (float)intPart) * TEN;
+
+                if (thirdDecimal >= FIVE) {
+                    // Rotunjire la sus la 2 zecimale
+                    intPart += 1;
+                }
+
+                float result = (float)intPart / ONE_HUNDRED;
+                printf("%.2f", result);
             }
 
             if (j < nr_campuri - 1)
