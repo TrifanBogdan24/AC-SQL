@@ -777,7 +777,7 @@ void UPDATE_materii(secretariat *secretariat,
 void UPDATE_inrolari(secretariat *secretariat,
     char *camp, char *valoare,
     int nr_conditii, conditie *conditii) {
-    for (int i = 0; i < secretariat->nr_materii; i++) {
+    for (int i = 0; i < secretariat->nr_inrolari; i++) {
         inrolare *inrolare = &secretariat->inrolari[i];
 
         if (nr_conditii > 0
