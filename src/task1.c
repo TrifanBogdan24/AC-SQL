@@ -168,15 +168,15 @@ void calculeaza_medii_generale(secretariat *s) {
     int idx_inrolare = 0;
 
     for (int i = 0; i < s->nr_studenti; i++) {
-        float suma_notelor = 0.0f;
+        double suma_notelor = 0.0f;
         int nr_materii = 0;
 
         while (idx_inrolare < s->nr_inrolari
             && s->inrolari[idx_inrolare].id_student == s->studenti[i].id) {
             suma_notelor +=
-                s->inrolari[idx_inrolare].note[0]
-                + s->inrolari[idx_inrolare].note[1]
-                + s->inrolari[idx_inrolare].note[2];
+                (double) s->inrolari[idx_inrolare].note[0]
+                + (double) s->inrolari[idx_inrolare].note[1]
+                + (double) s->inrolari[idx_inrolare].note[2];
             nr_materii++;
             idx_inrolare++;
         }
@@ -184,7 +184,7 @@ void calculeaza_medii_generale(secretariat *s) {
         if (nr_materii == 0)
             s->studenti[i].medie_generala = 0.0f;
         else
-            s->studenti[i].medie_generala = suma_notelor / (float)nr_materii;
+            s->studenti[i].medie_generala = (float)(suma_notelor / (double)nr_materii);
     }
 }
 
