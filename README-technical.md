@@ -194,3 +194,21 @@ Observații:
 - Gestionarea memoriei dinamice a fost făcută atent (alocare și eliberare la timp).  
 - Acoladele nu se deschid pe o linie nouă.  
 
+
+
+## 💡 Idei finale
+
+Provocările principale pe care le-am întâmpinat:
+- **Ștergerea sigură a unui element din vectori dinamici**:
+  Pe tabela **materii**, care conține două câmpuri alocate dinamic,
+  a fost necesar să folosesc `memmove` pentru a **shifta la stânga** memoria vectorului, evitând memory leak-uri.
+
+- Transformarea vectorului de studenți într-o secvență de octeți a fost mai complicată decât părea:
+    nu am putut să folosesc direct `sizeof(struct student)`,
+    ci am calculat dimensiunea fiecărui câmp în bytes.  
+
+- **Precizia numerelor zecimale**  
+  Am învățat că pentru calculele de medii,
+  `double` oferă precizie mult mai bună decât `float`.  
+
+- Operațiile pe sirurile de caractere în C
