@@ -6,7 +6,6 @@ despre studenți, materii și relațiile dintre acestea dintr-o facultate.
 Baza de date este administrată printr-un sistem de interogare și actualizare denumit **AC SQL**,
 care include criptarea memoriei cu un algoritm simplificat de tip **CBC**.
 
-
 ## Structuri de Date folosite
 
 Baza de date **secretariat** conține:

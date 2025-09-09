@@ -3,10 +3,10 @@ name: Run Tests on Implementation
 on:
   push:
     branches: main
-    paths: ["C-method", "tests"]
+    paths: ["C-method/**", "tests/**"]
   pull_request:
     branches: main
-    paths: ["C-method", "tests"]
+    paths: ["C-method/**", "tests/**"]
 
 jobs:
   test:
