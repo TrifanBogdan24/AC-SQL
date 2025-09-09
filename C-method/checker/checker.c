@@ -5,7 +5,7 @@
 #include "../src/task1.h"
 #include "../src/task3.h"
 #include "../checker/helper.h"
-#define TEST_DB "tests/db/small.db"
+#define TEST_DB "../tests/db/small.db"
 #define EPSILON 0.001
 
 int eps_eq(float a, float b) {
@@ -84,20 +84,20 @@ int check_elibereaza_secretariat() {
 }
 
 void run_task3() {
-    secretariat *s1 = citeste_secretariat_helper("tests/db/task3/test1.db");
-    cripteaza_studenti(s1, "pclp1", 5, "aa", 2, "tests/output/task3/test1.db.enc");
+    secretariat *s1 = citeste_secretariat_helper("../tests/db/task3/test1.db");
+    cripteaza_studenti(s1, "pclp1", 5, "aa", 2, "../tests/output-C-method/task3/test1.db.enc");
 
-    secretariat *s2 = citeste_secretariat_helper("tests/db/task3/test2.db");
-    cripteaza_studenti(s2, "pclp1", 5, "aa", 2, "tests/output/task3/test2.db.enc");
+    secretariat *s2 = citeste_secretariat_helper("../tests/db/task3/test2.db");
+    cripteaza_studenti(s2, "pclp1", 5, "aa", 2, "../tests/output-C-method/task3/test2.db.enc");
 
-    secretariat *s3 = citeste_secretariat_helper("tests/db/task3/test3.db");
-    cripteaza_studenti(s3, "pclp1", 5, "aa", 2, "tests/output/task3/test3.db.enc");
+    secretariat *s3 = citeste_secretariat_helper("../tests/db/task3/test3.db");
+    cripteaza_studenti(s3, "pclp1", 5, "aa", 2, "../tests/output-C-method/task3/test3.db.enc");
 
-    secretariat *s4 = citeste_secretariat_helper("tests/db/task3/test4.db");
-    cripteaza_studenti(s4, "pclp1", 5, "aa", 2, "tests/output/task3/test4.db.enc");
+    secretariat *s4 = citeste_secretariat_helper("../tests/db/task3/test4.db");
+    cripteaza_studenti(s4, "pclp1", 5, "aa", 2, "../tests/output-C-method/task3/test4.db.enc");
 
-    secretariat *s5 = citeste_secretariat_helper("tests/db/task3/test5.db");
-    cripteaza_studenti(s5, "pclp1", 5, "aa", 2, "tests/output/task3/test5.db.enc");
+    secretariat *s5 = citeste_secretariat_helper("../tests/db/task3/test5.db");
+    cripteaza_studenti(s5, "pclp1", 5, "aa", 2, "../tests/output-C-method/task3/test5.db.enc");
 }
 
 int main(int argc, char *argv[]) {

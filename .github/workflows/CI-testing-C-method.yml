@@ -3,8 +3,10 @@ name: Run Tests on Implementation
 on:
   push:
     branches: main
+    paths: ["C-method", "tests"]
   pull_request:
     branches: main
+    paths: ["C-method", "tests"]
 
 jobs:
   test:
@@ -21,14 +23,17 @@ jobs:
           pip3 install --user cpplint
 
       - name: Setup
+        working-directory: ./C-method
         run: |
             chmod +x setup.sh
             sudo ./setup.sh
 
       - name: Compile
+        working-directory: ./C-method
         run: make 2>&1 | tee compile_info.txt
 
       - name: Run tests (implementation & coding style)
+        working-directory: ./C-method
         run: python3 checker.py 2>&1 | tee test_results.txt
 
       - name: Upload test logs as artifacts
@@ -37,8 +42,8 @@ jobs:
         with:
           name: checker-logs
           path: |
-            compile_info.txt
-            test_results.txt
+            ./C-method/compile_info.txt
+            ./C-method/test_results.txt
             # Without `*` globbing, folders files will not be uploaded
-            tests/output/*
+            tests/output-C-method/*
           retention-days: 7

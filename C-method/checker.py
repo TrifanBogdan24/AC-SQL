@@ -76,20 +76,20 @@ def check_task_2():
     print("TASK 2")
     print("----------------")
 
-    for database in os.listdir("tests/db"):
-        if not os.path.isfile(os.path.join("tests/db", database)):
+    for database in os.listdir("../tests/db"):
+        if not os.path.isfile(os.path.join("../tests/db", database)):
             continue
         print("Database: " + database)
         print()
-        for test in os.listdir("tests/input"):
+        for test in os.listdir("../tests/input"):
             print("Test: " + test)
 
-            input_test = "tests/input/" + test
-            output_test = "tests/output/" + database.split(".")[0] + "." + test.split(".")[0] + ".out"
-            ref_test = "tests/ref/" + database.split(".")[0] + "." + test.split(".")[0] + ".ref"
+            input_test = "../tests/input/" + test
+            output_test = "../tests/output-C-method/" + database.split(".")[0] + "." + test.split(".")[0] + ".out"
+            ref_test = "../tests/ref/" + database.split(".")[0] + "." + test.split(".")[0] + ".ref"
 
             with open(input_test, 'r') as f:
-                result = subprocess.run(['./tema3', 'tests/db/' + database], stdin=f, capture_output=True, text=True)
+                result = subprocess.run(['./tema3', '../tests/db/' + database], stdin=f, capture_output=True, text=True)
             
             if result.returncode != 0:
                 print("Eroare de rulare! Posibil segmentation fault.")
@@ -114,8 +114,8 @@ def check_task_2():
     return points
 
 def check_task_3():
-    if not os.path.exists("tests/output/task3"):
-        os.makedirs("tests/output/task3")
+    if not os.path.exists("../tests/output-C-method/task3"):
+        os.makedirs("../tests/output-C-method/task3")
     dispatch_helper()
     os.system("gcc checker/checker.c checker/helper.o src/task1.c src/task3.c -o checker.exe -Iinclude -lm")
     os.system("chmod +x checker.exe") 
@@ -126,12 +126,12 @@ def check_task_3():
     print("----------------")
 
     points = 0
-    for database in sorted(os.listdir("tests/db/task3/")):
-        if not os.path.isfile(os.path.join("tests/db/task3", database)):
+    for database in sorted(os.listdir("../tests/db/task3/")):
+        if not os.path.isfile(os.path.join("../tests/db/task3", database)):
             continue
         print("Test: " + database)
-        output_test = "tests/output/task3/" + database.split(".")[0] + ".db.enc"
-        ref_test = "tests/ref/task3/" + database.split(".")[0] + ".db.enc.ref"
+        output_test = "../tests/output-C-method/task3/" + database.split(".")[0] + ".db.enc"
+        ref_test = "../tests/ref/task3/" + database.split(".")[0] + ".db.enc.ref"
 
         if os.system(f"cmp {output_test} {ref_test}") != 0:
             print(f"{database} - Rezultat incorect!")
@@ -146,7 +146,7 @@ def check_task_3():
 
 def check_valgrind(exec, database, test):
     with open(test, 'r') as f:
-        result = subprocess.run(['valgrind', '--leak-check=full', './' + exec, 'tests/db/' + database], stdin=f, capture_output=True, text=True)
+        result = subprocess.run(['valgrind', '--leak-check=full', './' + exec, '../tests/db/' + database], stdin=f, capture_output=True, text=True)
     if "ERROR SUMMARY: 0 errors from 0 contexts" in result.stderr:
         print("Valgrind OK.")
         return True
