@@ -95,6 +95,9 @@ def check_task_2():
                 print("Eroare de rulare! Posibil segmentation fault.")
                 continue
 
+            # Creaza directoarele parinte pentru output (daca nu exista deja)
+            os.makedirs(os.path.dirname(output_test), exist_ok=True)
+
             with open(output_test, 'w') as f:
                 f.write(result.stdout)
             
