@@ -1147,12 +1147,6 @@ int main(int argc, char *argv[]) {
     }
 
     secretariat *secretariat = citeste_secretariat(argv[1]);
-    /* snippet criptare:
-    char *iv = "ab";
-    char *key = "pclp1";
-    cripteaza_studenti(secretariat, (void*)key, strlen(key), (void*)iv, strlen(iv), "fisier.acs");
-    return 0;
-    */
 
     int nr_interogari = 0;
 
