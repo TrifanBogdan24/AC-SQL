@@ -1,4 +1,4 @@
-include!("../include/structuri.rs");
+use crate::structuri::*;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -131,7 +131,7 @@ fn parseaza_linie(linie: &str, s: &mut Secretariat, table_type: &TableType) {
             /* Pentru debug: println!("Inrolari: {:?}", inrolare); */
             s.inrolari.push(inrolare);
         }
-        _ => ()
+        _ => ()   // Nu se intampla nimic
     }
 }
 
@@ -140,13 +140,13 @@ pub fn calculeaza_medii_generale(s: &mut Secretariat) -> () {
     let mut idx_inrolare: usize = 0;
     let nr_inrolari: usize = s.inrolari.len();
 
-    for student in &s.studenti {
+    for student in s.studenti.iter_mut() {
         // Calculeaza media generala a unui student:
         let mut suma_notelor: f32 = 0.0f32;
         let mut nr_materii: usize = 0;
 
-        while (idx_inrolare < nr_inrolari
-            && s.inrolari[idx_inrolare].id_student == student.id) {
+        while idx_inrolare < nr_inrolari
+            && s.inrolari[idx_inrolare].id_student == student.id {
             suma_notelor += s.inrolari[idx_inrolare].note[0];
             suma_notelor += s.inrolari[idx_inrolare].note[1];
             suma_notelor += s.inrolari[idx_inrolare].note[2];
@@ -154,6 +154,8 @@ pub fn calculeaza_medii_generale(s: &mut Secretariat) -> () {
             nr_materii += 1;
             idx_inrolare += 1;
         }
+
+        student.medie_generala = suma_notelor / (idx_inrolare as f32);
     }
 }
 
