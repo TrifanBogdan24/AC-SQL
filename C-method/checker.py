@@ -71,7 +71,7 @@ def check_task_2():
     
     points = 0
     valgrind_pass = True
-    os.system("chmod +x tema3")
+    os.system("chmod +x ac-sql")
 
     print("TASK 2")
     print("----------------")
@@ -89,7 +89,7 @@ def check_task_2():
             ref_test = "../tests/ref/" + database.split(".")[0] + "." + test.split(".")[0] + ".ref"
 
             with open(input_test, 'r') as f:
-                result = subprocess.run(['./tema3', '../tests/db/' + database], stdin=f, capture_output=True, text=True)
+                result = subprocess.run(['./ac-sql', '../tests/db/' + database], stdin=f, capture_output=True, text=True)
             
             if result.returncode != 0:
                 print("Eroare de rulare! Posibil segmentation fault.")
@@ -107,7 +107,7 @@ def check_task_2():
             else:
                 print(f"{test} - OK")
                 points += 3.5
-                valgrind_pass &= check_valgrind("tema3", database, input_test)
+                valgrind_pass &= check_valgrind("ac-sql", database, input_test)
             print("----------------")
     if not valgrind_pass:
         print("Depunctare pentru memory leaks. -10 puncte")
@@ -252,7 +252,7 @@ def main():
     points += check_coding_style()
     print()
     print("PUNCTAJ FINAL: " + str(points))
-    os.system("rm -f tema3")
+    os.system("rm -f ac-sql")
 
 if __name__ == "__main__":
     main()

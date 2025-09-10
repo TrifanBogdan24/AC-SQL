@@ -1142,7 +1142,7 @@ int main(int argc, char *argv[]) {
 
     if (argc != 2) {
         fprintf(stderr, "[EROARE] Programul se asteapta sa fie apelat in felul urmator:\n");
-        fprintf(stderr, "         ./tema1 <file.db>\n");
+        fprintf(stderr, "         ./ac-sql <file.db>\n");
         return EXIT_FAILURE;
     }
 

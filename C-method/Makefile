@@ -3,10 +3,10 @@ FLAGS = -Wall -g -Wextra
 COMPILER = gcc
 
 build:
-	$(COMPILER) $(FLAGS) src/*.c -o tema3 -Iinclude -lm
+	$(COMPILER) $(FLAGS) src/*.c -o ac-sql -Iinclude -lm
 
 clean:
-	rm -f tema3	
+	rm -f ac-sql
 
 # DO NOT REMOVE THE FOLLOWING RULE:
 dispatch_helper:
