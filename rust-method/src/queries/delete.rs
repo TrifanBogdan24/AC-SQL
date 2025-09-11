@@ -12,7 +12,7 @@ enum IdType {
 }
 
 
-fn delete_from_inrolari_by_id(s: &mut Secretariat, id_type: IdType, id: u32) {
+fn delete_from_inrolari_by_id(s: &mut Secretariat, id_type: IdType, id: usize) {
     let mut idx = 0;
 
     while idx < s.inrolari.len() {
@@ -31,33 +31,33 @@ fn delete_from_inrolari_by_id(s: &mut Secretariat, id_type: IdType, id: u32) {
 
 /// Trait pentru elementele unei tabele
 trait TableEntry: Matchable {
-    fn id(&self) -> u32;
+    fn id(&self) -> usize;
 
     /// returneaza ID-urile care trebuie sterse din Inrolari
-    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
         Vec::new() // default: nu sterge nimic
     }
 }
 
 
 impl TableEntry for Student {
-    fn id(&self) -> u32 { self.id }
+    fn id(&self) -> usize { self.id }
 
-    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
         vec![(IdType::IdStudent, self.id)]
     }
 }
 
 impl TableEntry for Materie {
-    fn id(&self) -> u32 { self.id }
+    fn id(&self) -> usize { self.id }
 
-    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
         vec![(IdType::IdMaterie, self.id)]
     }
 }
 
 impl TableEntry for Inrolare {
-    fn id(&self) -> u32 { 0 }
+    fn id(&self) -> usize { 0 }
     // default: nu sterge nimic
 }
 
@@ -67,7 +67,7 @@ impl TableEntry for Inrolare {
 fn delete_from_table<T: TableEntry>(
     entries: &mut Vec<T>,
     conditii: &Vec<Conditie>,
-) -> Result<Vec<(IdType, u32)>, String> {
+) -> Result<Vec<(IdType, usize)>, String> {
     let mut idx = 0;
     let mut related_ids = Vec::new();
 

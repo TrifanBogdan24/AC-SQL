@@ -101,7 +101,7 @@ fn parseaza_intrare_inrolare(linie: &str) -> Inrolare {
 }
 
 
-pub fn adauga_student(s: &mut Secretariat, id: u32, nume: &String, an_studiu: u8, statut: char, medie_generala: f32) {
+pub fn adauga_student(s: &mut Secretariat, id: usize, nume: &String, an_studiu: u8, statut: char, medie_generala: f32) {
     let student = Student {
         id: id,
         nume: nume.clone(),

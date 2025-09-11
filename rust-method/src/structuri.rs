@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, Default)]
 pub struct Student {
-    pub id: u32,
+    pub id: usize,
     pub nume: String,
     pub an_studiu: u8,
     pub statut: char,
@@ -9,15 +9,15 @@ pub struct Student {
 
 #[derive(Debug, Clone, Default)]
 pub struct Materie {
-    pub id: u32,
+    pub id: usize,
     pub nume: String,
     pub nume_titular: String
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Inrolare {
-    pub id_student: u32,
-    pub id_materie: u32,
+    pub id_student: usize,
+    pub id_materie: usize,
     pub note: [f32; 3]
 }
 

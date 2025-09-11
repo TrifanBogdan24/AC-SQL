@@ -6,16 +6,18 @@ mod queries {
     pub mod where_clause;
     pub mod select;
     pub mod delete;
+    pub mod update;
 }
 
 use crate::structuri::*;
 use crate::queries::select::select;
 use crate::queries::delete::delete;
+use crate::queries::update::update;
 
 
 use std::{env, process::exit};
 use crate::task1::citeste_secretariat;
-use std::io::{self};
+use std::io;
 
 
 
@@ -61,6 +63,10 @@ fn main() {
                 Err(message) => eprintln!("[EROARE] {:}", message)
             }
         } else if query.starts_with("UPDATE") {
+            match update(&mut secretariat, query) {
+                Ok(_) => (),
+                Err(message) => eprintln!("[EROARE] {:}", message)
+            }
         } else {
             eprintln!("[EROARE] Interogare invalida!");
         }
