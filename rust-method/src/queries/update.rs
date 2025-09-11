@@ -1,13 +1,135 @@
 use crate::Secretariat;
+use crate::Student;
+use crate::Materie;
+use crate::Inrolare;
+
 
 use crate::queries::where_clause::*;
 use crate::queries::where_clause::parseaza_conditiile_where;
 
+use crate::task1::calculeaza_medii_generale;
+
 trait Updateable {
-    fn update_table_field(&self, field: &str, value: &str) -> Result<(), String>;
+    fn update_table_field(&mut self, field: &str, value: &str) -> Result<(), String>;
 }
 
 
+impl Updateable for Student {
+    fn update_table_field(&mut self, field: &str, value: &str) -> Result<(), String> {
+        match field {
+            "id" => 
+                self.id = value
+                    .parse::<usize>()
+                    .map_err(|_| format!("ID invalid: {:?}", value))?,
+            "nume" =>
+                self.nume = value.to_string(),
+            "an studiu" =>
+                self.an_studiu = value
+                    .parse::<u8>()
+                    .map_err(|_| format!("An studiu invalid: {:?}", value))?,
+            "statut" => {
+                match value {
+                    "t" => self.statut = 't',
+                    "b" => self.statut = 'b',
+                    _ => return Err(format!("Statut invalid: {:?}", value)),
+                }
+            }
+            "medie_generala" =>
+                return Err("Buna incercare :) NU poti modifica media generala!".to_string()),
+            _ =>
+                return Err(format!("Camp invalid {:?}", field))
+        }
+
+        Ok(())
+    }
+}
+
+
+impl Updateable for Materie {
+    fn update_table_field(&mut self, field: &str, value: &str) -> Result<(), String> {
+        match field {
+            "id" =>
+                self.id = value
+                    .parse::<usize>()
+                    .map_err(|_| format!("ID invalid: {:?}", value))?,
+            "nume" =>
+                self.nume = value.to_string(),
+            "nume_titular" =>
+                self.nume_titular = value.to_string(),
+            _ =>
+                return Err(format!("Camp invalid {:?}", field))
+        }
+
+        Ok(())
+    }
+}
+
+
+impl Updateable for Inrolare {
+    fn update_table_field(&mut self, field: &str, value: &str) -> Result<(), String> {
+        match field {
+
+            "id_student" =>
+                self.id_student = value
+                    .parse::<usize>()
+                    .map_err(|_| format!("ID invalid pentru student: {:?}", value))?,
+            "id_materie" =>
+                self.id_materie = value
+                    .parse::<usize>()
+                    .map_err(|_| format!("ID invalid pentru metid_materie: {:?}", value))?,
+            "note" => {
+                let mut tokens = value.split_whitespace();
+
+                let nota_laborator: f32 = tokens
+                    .next()
+                    .ok_or_else(|| "Note invalide".to_string())?
+                    .parse()
+                    .map_err(|_| "Note invalide".to_string())?;
+
+                let nota_partial: f32 = tokens
+                    .next()
+                    .ok_or_else(|| "Note invalide".to_string())?
+                    .parse()
+                    .map_err(|_| "Note invalide".to_string())?;
+
+                let nota_final: f32 = tokens
+                    .next()
+                    .ok_or_else(|| "Note invalide".to_string())?
+                    .parse()
+                    .map_err(|_| "Note invalide".to_string())?;
+
+                self.note[0] = nota_laborator;
+                self.note[1] = nota_partial;
+                self.note[2] = nota_final; 
+            }
+            _ =>
+                return Err(format!("Camp invalid {:?}", field))
+        }
+
+        Ok(())
+    }
+}
+
+
+/// Functie generica
+fn update_table<T: Updateable + Matchable>(
+    entries: &mut [T],
+    conditii: &Vec<Conditie>,
+    field: &str, value: &str
+) -> Result<(), String>
+{
+    for entry in entries.iter_mut() {
+        match match_on_all_conditii(entry, conditii) {
+            Ok(true) => (),
+            Ok(false) => continue,
+            Err(message) => return Err(message),
+        }
+
+        entry.update_table_field(field, value)?;
+    }
+
+    Ok(())
+}
 
 
 /* Template:
@@ -35,10 +157,10 @@ pub fn update(s: &mut Secretariat, query: &str) -> Result<(), String> {
     // Imparte <camp> de <valoare>
     let eq_pos = camp_valoare.find('=').ok_or("Lipseste '=' in expresia de update")?;
     let camp = camp_valoare[..eq_pos].trim();
-    let mut valoare = camp_valoare[eq_pos + 1..].trim().to_string();
+    let mut valoare = camp_valoare[eq_pos + 1..].trim();
 
     // Sterge ghilimele daca exista
-    valoare = valoare.trim_matches('"').trim_matches('\'').to_string();
+    valoare = valoare.trim_matches('"').trim_matches('\'');
 
     // Extrage conditii (TOT ce este dupa WHERE)
     let mut str_conditii = ptr.trim().to_string();
@@ -52,10 +174,17 @@ pub fn update(s: &mut Secretariat, query: &str) -> Result<(), String> {
     // exemplu: parseaza conditii
     let conditii = parseaza_conditiile_where(&str_conditii)?;
 
-    println!("Tabela: {}", nume_tabela);
-    println!("Camp: {}", camp);
-    println!("Valoare: {}", valoare);
-    println!("Conditii: {:?}", conditii);
-
-    Ok(())
+    match nume_tabela {
+        "studenti" => update_table(&mut s.studenti, &conditii, camp, valoare),
+        "materii"  => update_table(&mut s.materii, &conditii, camp, valoare),
+        "inrolari" => {
+            let result = update_table(&mut s.inrolari, &conditii, camp, valoare);
+            calculeaza_medii_generale(s);
+            result
+        }
+        _ => Err(format!(
+            "Tabela {:?} nu exista in baza de date a facultati!",
+            nume_tabela
+        ))
+    }
 }

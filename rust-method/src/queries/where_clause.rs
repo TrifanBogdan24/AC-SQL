@@ -62,9 +62,9 @@ pub fn parseaza_conditiile_where(str_conditii: &str) -> Result<Vec<Conditie>, St
         // Fiecare conditie trebuie sa aiba cel putin 3 token-uri: camp, operator, valoare
         let mut tokens = cond_str.splitn(3, ' '); // split in maxim 3 parti
 
-        let camp = tokens.next().ok_or(format!("Camp lipsa in conditie: '{}'", cond_str))?.trim();
-        let op_comp = tokens.next().ok_or(format!("Operator lipsa in conditie: '{}'", cond_str))?.trim();
-        let valoare = tokens.next().ok_or(format!("Valoare lipsa in conditie: '{}'", cond_str))?.trim();
+        let camp = tokens.next().ok_or(format!("Camp lipsa in conditie: {:?}", cond_str))?.trim();
+        let op_comp = tokens.next().ok_or(format!("Operator lipsa in conditie: {:?}", cond_str))?.trim();
+        let valoare = tokens.next().ok_or(format!("Valoare lipsa in conditie: {:?}", cond_str))?.trim();
 
         // Elimina ghilimelele de la inceput si sfarsit
         let valoare = valoare.trim_matches('"').to_string();

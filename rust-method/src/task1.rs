@@ -162,7 +162,7 @@ pub fn calculeaza_medii_generale(s: &mut Secretariat) -> () {
 pub fn citeste_secretariat(nume_fisier: &str) -> Secretariat {
     let mut secretariat = Secretariat::default();
     let file = File::open(nume_fisier).unwrap_or_else(|_| {
-        eprintln!("Eroare: nu pot deschide fișierul {}", nume_fisier);
+        eprintln!("Eroare: nu pot deschide fișierul {:?}", nume_fisier);
         process::exit(255);
     });
 

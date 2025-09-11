@@ -31,34 +31,27 @@ fn delete_from_inrolari_by_id(s: &mut Secretariat, id_type: IdType, id: usize) {
 
 /// Trait pentru elementele unei tabele
 trait TableEntry: Matchable {
-    fn id(&self) -> usize;
-
     /// returneaza ID-urile care trebuie sterse din Inrolari
-    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
-        Vec::new() // default: nu sterge nimic
-    }
+    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)>;
 }
 
 
 impl TableEntry for Student {
-    fn id(&self) -> usize { self.id }
-
     fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
         vec![(IdType::IdStudent, self.id)]
     }
 }
 
 impl TableEntry for Materie {
-    fn id(&self) -> usize { self.id }
-
     fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
         vec![(IdType::IdMaterie, self.id)]
     }
 }
 
 impl TableEntry for Inrolare {
-    fn id(&self) -> usize { 0 }
-    // default: nu sterge nimic
+    fn related_ids_to_delete(&self) -> Vec<(IdType, usize)> {
+        Vec::new() // default: nu sterge nimic
+    }
 }
 
 
