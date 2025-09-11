@@ -468,7 +468,7 @@ void SELECT_FROM_studenti(secretariat *secretariat,
                 printf("%c", student.statut);
             } else if (!strcmp(campuri[j], "medie_generala")) {
                 // Rotunjire la 2 zecimale (roundf -> cel mai apropiat intreg):
-                float rounded = roundf((student.medie_generala) * HUNDRED) / HUNDRED;
+                float rounded = roundf(student.medie_generala * HUNDRED) / HUNDRED;
                 printf("%.2f", rounded);
             }
 
