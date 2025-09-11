@@ -1,32 +1,89 @@
 use crate::Secretariat;
-
+use crate::Student;
+use crate::Materie;
+use crate::Inrolare;
 
 use crate::queries::where_clause::*;
 
-/*
-TODO: daca stergerea se fac din tabelele Studenti/Materii,
-      sterge intrarile asociate din Inrolari
- */
 
-fn delete_from_table<T: Matchable>(
-    entries: &mut Vec<T>,
-    conditii: &Vec<Conditie>
-) -> Result<(), String>
-{
-    let mut idx: usize = 0;
-    while idx < entries.len() {
-        match match_on_all_conditii(&entries[idx], conditii)? {
-            true => {
-                entries.remove(idx);
-            }
-            false =>
-                idx += 1
+enum IdType {
+    IdStudent,
+    IdMaterie,
+}
+
+
+fn delete_from_inrolari_by_id(s: &mut Secretariat, id_type: IdType, id: u32) {
+    let mut idx = 0;
+
+    while idx < s.inrolari.len() {
+        let remove: bool = match id_type {
+            IdType::IdStudent => s.inrolari[idx].id_student == id,
+            IdType::IdMaterie => s.inrolari[idx].id_materie == id,
+        };
+
+        if remove {
+            s.inrolari.remove(idx);
+        } else {
+            idx += 1;
         }
+    }
+}
 
+/// Trait pentru elementele unei tabele
+trait TableEntry: Matchable {
+    fn id(&self) -> u32;
+
+    /// returneaza ID-urile care trebuie sterse din Inrolari
+    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+        Vec::new() // default: nu sterge nimic
+    }
+}
+
+
+impl TableEntry for Student {
+    fn id(&self) -> u32 { self.id }
+
+    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+        vec![(IdType::IdStudent, self.id)]
+    }
+}
+
+impl TableEntry for Materie {
+    fn id(&self) -> u32 { self.id }
+
+    fn related_ids_to_delete(&self) -> Vec<(IdType, u32)> {
+        vec![(IdType::IdMaterie, self.id)]
+    }
+}
+
+impl TableEntry for Inrolare {
+    fn id(&self) -> u32 { 0 }
+    // default: nu sterge nimic
+}
+
+
+
+/// Functie generica de stergere dintr-o tabela
+fn delete_from_table<T: TableEntry>(
+    entries: &mut Vec<T>,
+    conditii: &Vec<Conditie>,
+) -> Result<Vec<(IdType, u32)>, String> {
+    let mut idx = 0;
+    let mut related_ids = Vec::new();
+
+    while idx < entries.len() {
+        if match_on_all_conditii(&entries[idx], conditii)? {
+            related_ids.extend(entries[idx].related_ids_to_delete());
+            entries.remove(idx);
+        } else {
+            idx += 1;
+        }
     }
 
-    Ok(())
+    Ok(related_ids)
 }
+
+
 
 /* Template
 DELETE FROM <tabel> WHERE <conditie>;
@@ -90,12 +147,27 @@ pub fn delete(s: &mut Secretariat, query: &str) -> Result<(), String> {
     let conditii: Vec<Conditie> = parseaza_conditiile_where(str_conditii)?;
     
     match nume_tabela {
-        "studenti" => delete_from_table(&mut s.studenti, &conditii),
-        "materii" => delete_from_table(&mut s.materii, &conditii),
-        "inrolari" => delete_from_table(&mut s.inrolari, &conditii),
+        "studenti" => {
+            let related_ids = delete_from_table(&mut s.studenti, &conditii)?;
+            for (id_type, id) in related_ids {
+                delete_from_inrolari_by_id(s, id_type, id);
+            }
+            Ok(())
+        }
+        "materii" => {
+            let related_ids = delete_from_table(&mut s.materii, &conditii)?;
+            for (id_type, id) in related_ids {
+                delete_from_inrolari_by_id(s, id_type, id);
+            }
+            Ok(())
+        }
+        "inrolari" => {
+            delete_from_table(&mut s.inrolari, &conditii)?;
+            Ok(())
+        }
         _ => Err(format!(
             "Tabela {:?} nu exista in baza de date a facultati!",
             nume_tabela
-        ))
+        )),
     }
 }
