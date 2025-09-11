@@ -155,7 +155,7 @@ pub fn calculeaza_medii_generale(s: &mut Secretariat) -> () {
             idx_inrolare += 1;
         }
 
-        student.medie_generala = suma_notelor / (idx_inrolare as f32);
+        student.medie_generala = suma_notelor / (nr_materii as f32);
     }
 }
 

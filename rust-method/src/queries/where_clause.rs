@@ -84,7 +84,7 @@ fn match_num_on_conditie<T>(num: T, cond: &Conditie) -> Result<bool, String>
 where
     T: FromStr + PartialEq + PartialOrd + std::fmt::Debug,
 {
-    let mut valoare: T;
+    let valoare: T;
     if let Ok(num) = cond.valoare.parse() {
         valoare = num;
     } else {

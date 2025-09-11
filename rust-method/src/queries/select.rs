@@ -132,7 +132,7 @@ pub fn select(s: &Secretariat, query: &str) -> Result<(), String> {
         }
     }
 
-    let mut campuri: Vec<&str>;
+    let campuri: Vec<&str>;
     if is_select_all {
         campuri = match nume_tabela {
             "studenti" => vec!["id", "nume", "an_studiu", "statut", "medie_generala"],
@@ -150,11 +150,7 @@ pub fn select(s: &Secretariat, query: &str) -> Result<(), String> {
             .collect();
     }
 
-    let conditii: Vec<Conditie> = if let Ok(array) = parseaza_conditiile_where(str_conditii) {
-        array
-    } else {
-        return Err("Eroare la parsarea conditiilor!".to_string());
-    };
+    let conditii: Vec<Conditie> = parseaza_conditiile_where(str_conditii)?;
 
     match nume_tabela {
         "studenti" => select_from_table(&s.studenti, &campuri, &conditii),
@@ -163,6 +159,6 @@ pub fn select(s: &Secretariat, query: &str) -> Result<(), String> {
         _ => Err(format!(
             "Tabela {:?} nu exista in baza de date a facultati!",
             nume_tabela
-        )),
+        ))
     }
 }

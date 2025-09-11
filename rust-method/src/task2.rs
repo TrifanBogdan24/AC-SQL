@@ -3,21 +3,19 @@ mod task1;
 mod task3;
 
 mod queries {
-    pub mod select;
     pub mod where_clause;
+    pub mod select;
+    pub mod delete;
 }
 
 use crate::structuri::*;
 use crate::queries::select::select;
-use crate::queries::where_clause::*;
+use crate::queries::delete::delete;
 
 
-use std::fmt::format;
-use std::{env, process::exit, vec};
+use std::{env, process::exit};
 use crate::task1::citeste_secretariat;
-use std::io::{self, BufRead};
-
-use std::str::FromStr;
+use std::io::{self};
 
 
 
@@ -58,6 +56,10 @@ fn main() {
                 Err(message) => eprintln!("[EROARE] {:}", message)
             }
         } else if query.starts_with("DELETE") {
+            match delete(&mut secretariat, query) {
+                Ok(_) => (),
+                Err(message) => eprintln!("[EROARE] {:}", message)
+            }
         } else if query.starts_with("UPDATE") {
         } else {
             eprintln!("[EROARE] Interogare invalida!");
