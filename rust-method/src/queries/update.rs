@@ -23,7 +23,7 @@ impl Updateable for Student {
                     .map_err(|_| format!("ID invalid: {:?}", value))?,
             "nume" =>
                 self.nume = value.to_string(),
-            "an studiu" =>
+            "an_studiu" =>
                 self.an_studiu = value
                     .parse::<u8>()
                     .map_err(|_| format!("An studiu invalid: {:?}", value))?,
@@ -35,7 +35,9 @@ impl Updateable for Student {
                 }
             }
             "medie_generala" =>
-                return Err("Buna incercare :) NU poti modifica media generala!".to_string()),
+                self.medie_generala = value
+                    .parse::<f32>()
+                    .map_err(|_| format!("Medie invalida: {:?}", value))?,
             _ =>
                 return Err(format!("Camp invalid {:?}", field))
         }
@@ -169,6 +171,7 @@ pub fn update(s: &mut Secretariat, query: &str) -> Result<(), String> {
     if str_conditii.ends_with(';') {
         str_conditii.pop();
     }
+
 
     // Aici poti sa folosesti deja `nume_tabela`, `camp`, `valoare` si `str_conditii`
     // exemplu: parseaza conditii

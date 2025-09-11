@@ -155,14 +155,18 @@ pub fn calculeaza_medii_generale(s: &mut Secretariat) -> () {
             idx_inrolare += 1;
         }
 
-        student.medie_generala = suma_notelor / (nr_materii as f32);
+        student.medie_generala = if nr_materii != 0 {
+            suma_notelor / (nr_materii as f32)
+        } else {
+            0.0
+        }
     }
 }
 
 pub fn citeste_secretariat(nume_fisier: &str) -> Secretariat {
     let mut secretariat = Secretariat::default();
     let file = File::open(nume_fisier).unwrap_or_else(|_| {
-        eprintln!("Eroare: nu pot deschide fișierul {:?}", nume_fisier);
+        eprintln!("Eroare la deschiderea fisierului {:?}", nume_fisier);
         process::exit(255);
     });
 

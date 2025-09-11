@@ -181,7 +181,7 @@ fn match_inrolare_on_conditie(inrolare: &Inrolare, cond: &Conditie) -> Result<bo
         "id_student" =>
             return match_num_on_conditie(inrolare.id_student, cond),
         "id_materie" =>
-            return match_num_on_conditie(inrolare.id_student, cond),
+            return match_num_on_conditie(inrolare.id_materie, cond),
         "note" => {
             let mut tokens = cond.valoare.split_whitespace();
 

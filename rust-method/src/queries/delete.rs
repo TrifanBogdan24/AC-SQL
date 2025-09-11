@@ -1,3 +1,4 @@
+use crate::task1::calculeaza_medii_generale;
 use crate::Secretariat;
 use crate::Student;
 use crate::Materie;
@@ -156,6 +157,7 @@ pub fn delete(s: &mut Secretariat, query: &str) -> Result<(), String> {
         }
         "inrolari" => {
             delete_from_table(&mut s.inrolari, &conditii)?;
+            calculeaza_medii_generale(s);
             Ok(())
         }
         _ => Err(format!(

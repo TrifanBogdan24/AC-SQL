@@ -18,7 +18,9 @@ impl Selectable for Student {
             "nume" => print!("{}", self.nume),
             "an_studiu" => print!("{}", self.an_studiu),
             "statut" => print!("{}", self.statut),
-            "medie_generala" => print!("{:.2}", self.medie_generala),
+            "medie_generala" =>
+                print!("{:.2}", 
+                    (self.medie_generala * 100.0f32).round() as f32 / 100.0f32),
             _ => return Err(format!("Camp invalid {:?}", field)),
         }
         Ok(())
