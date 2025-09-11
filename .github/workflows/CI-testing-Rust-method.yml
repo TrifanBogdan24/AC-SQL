@@ -1,0 +1,43 @@
+name: Run Tests on Implementation in Rust
+
+on:
+  push:
+    branches: main
+    paths: ["rust-method/**", "tests/**", ".github/workflows/**"]
+  pull_request:
+    branches: main
+    paths: ["rust-method/**", "tests/**", ".github/workflows/**"]
+
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust 🦀 (stable)
+        # actions-rs/toolchain@v1 is now deprecated
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install Python
+        run: |
+            sudo apt update
+            sudo apt install -y python3
+        
+
+      - name: Run tests on implementation
+        working-directory: ./rust-method
+        run: |
+            python3 checker.py 2>&1 | tee test_results.txt
+
+      - name: Upload test logs as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checker-logs
+          path: |
+            ./rust-method/test_results.txt
+            # Without `*` globbing, folders files will not be uploaded
+            tests/output-rust-method/*
+          retention-days: 5

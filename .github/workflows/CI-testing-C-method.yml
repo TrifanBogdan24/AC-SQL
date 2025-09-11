@@ -1,12 +1,12 @@
-name: Run Tests on Implementation
+name: Run Tests on Implementation in C
 
 on:
   push:
     branches: main
-    paths: ["C-method/**", "tests/**"]
+    paths: ["C-method/**", "tests/**", ".github/workflows/**"]
   pull_request:
     branches: main
-    paths: ["C-method/**", "tests/**"]
+    paths: ["C-method/**", "tests/**", ".github/workflows/**"]
 
 jobs:
   test:
