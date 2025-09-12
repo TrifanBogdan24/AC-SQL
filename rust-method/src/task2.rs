@@ -1,27 +1,25 @@
-mod structuri;
-mod task1;
-mod task3;
+use crate::queries::select::select;
+use crate::queries::delete::delete;
+use crate::queries::update::update;
+use crate::task1::citeste_secretariat;
 
-mod queries {
+pub mod structuri;
+pub mod task1;
+pub mod task3;
+
+pub mod queries {
     pub mod where_clause;
     pub mod select;
     pub mod delete;
     pub mod update;
 }
 
-use crate::structuri::*;
-use crate::queries::select::select;
-use crate::queries::delete::delete;
-use crate::queries::update::update;
-
+pub mod tests {
+    pub mod test_task1;
+}
 
 use std::{env, process::exit};
-use crate::task1::citeste_secretariat;
 use std::io;
-
-
-
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();

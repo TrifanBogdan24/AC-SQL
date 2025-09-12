@@ -1,6 +1,6 @@
-use crate::Student;
-use crate::Materie;
-use crate::Inrolare;
+use crate::structuri::Student;
+use crate::structuri::Materie;
+use crate::structuri::Inrolare;
 
 use std::str::FromStr;
 

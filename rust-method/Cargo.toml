@@ -1,10 +1,12 @@
 [package]
-name = "rust-method"
+name = "ac-sql"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
 name = "ac-sql"
 path = "src/task2.rs"
+
+
 
 [dependencies]

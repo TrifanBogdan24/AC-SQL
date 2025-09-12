@@ -1,8 +1,10 @@
 use crate::task1::calculeaza_medii_generale;
-use crate::Secretariat;
-use crate::Student;
-use crate::Materie;
-use crate::Inrolare;
+use crate::structuri::Secretariat;
+use crate::structuri::Student;
+use crate::structuri::Materie;
+use crate::structuri::Inrolare;
+
+
 
 use crate::queries::where_clause::*;
 

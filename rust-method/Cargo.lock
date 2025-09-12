@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "rust-method"
+name = "ac-sql"
 version = "0.1.0"
