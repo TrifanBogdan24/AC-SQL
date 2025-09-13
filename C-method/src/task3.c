@@ -143,5 +143,7 @@ void cripteaza_studenti(secretariat *secretariat, void *key, size_t key_len,
         for (size_t j = 0; j < block_length; j++)
             fwrite(&blocks[i][j], sizeof(unsigned char), 1, fout);
     }
+
+    fclose(fout);
     elibereaza_blocuri(&blocks);
 }

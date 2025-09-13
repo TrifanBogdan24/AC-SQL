@@ -9,4 +9,5 @@ path = "src/task2.rs"
 
 
 
-[dependencies]
+[dev-dependencies]
+rstest = "0.26.1"

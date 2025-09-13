@@ -134,7 +134,7 @@ def check_task_3():
             continue
         print("Test: " + database)
         output_test = "../tests/output-C-method/task3/" + database.split(".")[0] + ".db.enc"
-        ref_test = "../tests/ref/task3/" + database.split(".")[0] + ".db.enc.ref"
+        ref_test = "../tests/ref/task3-C-method/" + database.split(".")[0] + ".db.enc.ref"
 
         if os.system(f"cmp {output_test} {ref_test}") != 0:
             print(f"{database} - Rezultat incorect!")

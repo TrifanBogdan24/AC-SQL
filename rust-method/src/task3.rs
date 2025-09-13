@@ -1,7 +1,24 @@
 use crate::structuri::*;
-
+use std::fs::{File, create_dir_all};
+use std::io::Write;
+use std::path::Path;
 
 const NR_BLOCKS: usize = 4;
+
+#[allow(dead_code)]
+fn print_hex_blocks(blocks: &[Vec<u8>]) {
+    for i in 0..blocks.len() {
+        print!("Blocul {}: ", i);
+        for j in 0..blocks[i].len() {
+            print!("0x{:02x}", blocks[i][j]);
+            if j != blocks[i].len() - 1 {
+                print!(" ");
+            } else {
+                println!("")
+            }
+        }
+    }
+}
 
 fn xor(block: &[u8], key: &[u8]) -> Vec<u8> {
     block
@@ -66,7 +83,42 @@ fn split_into_blocks(secretariat: &Secretariat) -> Vec<Vec<u8>> {
 }
 
 
-pub fn cripteaza_studenti(secretariat: &Secretariat, key: &str, iv: &str, _cale_output: &str) {
+
+fn fwrite_blocks(blocks: &[Vec<u8>], cale_output: &str) {
+    let path = Path::new(cale_output);
+
+    // Creeaza directoarele parinte daca nu exista
+    if let Some(parent) = path.parent() {
+        if let Err(e) = create_dir_all(parent) {
+            eprintln!("[EROARE] la crearea directoarelor {}: {}", parent.display(), e);
+            return;
+        }
+    }
+
+    // Deschide fisierul pentru scriere
+    let mut file = match File::create(&path) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("[EROARE] la deschiderea fisierului {}: {}", path.display(), e);
+            return;
+        }
+    };
+
+    // Scrie fiecare bloc, byte cu byte
+    for block in blocks {
+        if let Err(e) = file.write_all(&block) {
+            eprintln!("[EROARE] la scrierea unui bloc: {}", e);
+            return;
+        }
+    }
+
+    // Flush pentru a te asigura ca tot ce e scris ajunge pe disc
+    if let Err(e) = file.flush() {
+        eprintln!("[EROARE] la scrierea in fisier: {}", e);
+    }
+}
+
+pub fn cripteaza_studenti(secretariat: &Secretariat, key: &str, iv: &str, cale_output: &str) {
     let mut blocks: Vec<Vec<u8>> = split_into_blocks(secretariat);
 
     let bytes_key: Vec<u8> = key.as_bytes().to_vec();
@@ -81,4 +133,6 @@ pub fn cripteaza_studenti(secretariat: &Secretariat, key: &str, iv: &str, _cale_
         blocks[i] = xor(&blocks[i], &bytes_key);
         blocks[i] = p_box(&blocks[i]);
     }
+
+    fwrite_blocks(&blocks, cale_output);
 }
