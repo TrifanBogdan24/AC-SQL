@@ -1,9 +1,3 @@
-use crate::queries::select::select;
-use crate::queries::delete::delete;
-use crate::queries::update::update;
-use crate::task1::citeste_secretariat;
-
-
 pub mod structuri;
 pub mod task1;
 pub mod task3;
@@ -19,6 +13,12 @@ mod tests {
     pub mod test_task1;
     pub mod test_task3;
 }
+
+
+use crate::queries::select::select;
+use crate::queries::delete::delete;
+use crate::queries::update::update;
+use crate::task1::citeste_secretariat;
 
 use std::{env, process::exit};
 use std::io;

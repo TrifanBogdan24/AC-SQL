@@ -16,7 +16,6 @@ pub trait Matchable {
     fn matches_condition(&self, cond: &Conditie) -> Result<bool, String>;
 }
 
-// Implementări pentru tipurile tale
 impl Matchable for Student {
     fn matches_condition(&self, cond: &Conditie) -> Result<bool, String> {
         match_student_on_conditie(self, cond)

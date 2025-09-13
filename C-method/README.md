@@ -1,10 +1,12 @@
 # AC SQL
 
 În cadrul acestui proiect am implementat o bază de date pentru gestionarea informațiilor
-despre studenți, materii și relațiile dintre acestea dintr-o facultate.  
+despre studenți, materii și relațiile dintre acestea dintr-o facultate.
 
 Baza de date este administrată printr-un sistem de interogare și actualizare denumit **AC SQL**,
 care include criptarea memoriei cu un algoritm simplificat de tip **CBC**.
+
+
 
 ## Structuri de Date folosite
 
@@ -27,7 +29,7 @@ struct secretariat {
 ```
 
 ### Intrare din tabela **studenti**
-Câmpuri: ID unic, nume complet, an de studiu, statut (`buget` / `taxă`), medie generală.  
+Câmpuri: ID unic, nume complet, an de studiu, statut (`buget` / `taxă`), medie generală.
 
 ```c
 struct student {
@@ -51,7 +53,7 @@ struct materie {
 ```
 
 ### Intrare din tabela **inrolari**
-Câmpuri: ID student, ID materie, note (laborator, parțial, final).  
+Câmpuri: ID student, ID materie, note (laborator, parțial, final).
 
 ```c
 struct inrolare {
@@ -67,32 +69,17 @@ Funcția `citeste_secretariat` încarcă baza de date în memorie dintr-un fiși
 - numele tabelelor sunt scrise între paranteze drepte (`[STUDENTI]`, `[MATERII]`, `[INROLARI]`)
 - valorile din fiecare intrare sunt separate prin `,`
 
-```txt
-[STUDENTI]
-0, Andrei Popescu, 2, b
-1, Ioana Ionescu, 1, t
-
-[MATERII]
-0, PCLP, Radu Bran
-1, USO, Maria Sandu
-
-[INROLARI]
-1, 1, 3.10 3.80 2.10
-2, 2, 2.65 1.20 3.00
-```
-
-
-Pentru delimitarea secțiunilor am folosit un `enum Table`.  
+Pentru delimitarea secțiunilor am folosit un `enum Table`.
 Atunci când citesc o linie `[ ... ]`, actualizez un **flag** de tip `Table`.
-Astfel știu în ce tabel să inserez datele următoare.  
+Astfel știu în ce tabel să inserez datele următoare.
 
-Parsarea liniilor se face cu funcții standard pe șiruri: `strtok`, `snprintf`/`strncpy`, `strcmp`.  
+Parsarea liniilor se face cu funcții standard pe șiruri: `strtok`, `snprintf`/`strncpy`, `strcmp`.
 
 La început, vectorii pentru studenți/materii/înrolari au dimensiune 0.
-Fiecare linie parsată este adăugată la final prin `realloc`.  
+Fiecare linie parsată este adăugată la final prin `realloc`.
 
 Media generală a unui student se calculează ca
-suma notelor obținute la materiile unde este înrolat, împărțită la numărul lor.  
+suma notelor obținute la materiile unde este înrolat, împărțită la numărul lor.
 
 ```c
 void calculeaza_medii_generale(secretariat *s);
@@ -104,20 +91,20 @@ void calculeaza_medii_generale(secretariat *s);
 
 ## `>_` Task 2: interpretor de comenzi SQL
 
-După încărcarea bazei de date, comenzile SQL sunt citite de la tastatură (**stdin**).  
+După încărcarea bazei de date, comenzile SQL sunt citite de la tastatură (**stdin**).
 
-Am implementat un parser capabil să proceseze:  
-- `SELECT` – interogări  
-- `UPDATE` – modificări condiționate  
-- `DELETE` – ștergeri de intrări  
+Am implementat un parser capabil să proceseze:
+- `SELECT`: interogări
+- `UPDATE`: modificări condiționate
+- `DELETE`: ștergeri de intrări
 
-Utilizatorul introduce un număr `n`, apoi cele `n` query-uri.  
+Utilizatorul introduce un număr `n`, apoi cele `n` query-uri.
 
 ### Filtrare cu WHERE
 
-Clauza `WHERE` este opțională. Condițiile sunt salvate într-o structură dedicată (`camp`, operator de comparație, valoare).  
+Clauza `WHERE` este opțională. Condițiile sunt salvate într-o structură dedicată (`camp`, operator de comparație, valoare).
 
-Pentru potrivire am implementat funcții de tip „pattern matching” pentru fiecare tabel, plus variante care verifică toate condițiile dintr-un array.  
+Pentru potrivire am implementat funcții de tip "pattern matching" pentru fiecare tabel, plus variante care verifică toate condițiile dintr-un array.
 
 ```c
 typedef struct {
@@ -136,21 +123,21 @@ int match_inrolare_on_all_conditii(inrolare inrolare, int nr_conditii, conditie 
 ```  
 
 ### SELECT
-- Suportă `*` (toate câmpurile) sau coloane specifice (cu un flag pentru globbing).  
-- Poate fi combinat cu `WHERE`.  
+- Suportă `*` (toate câmpurile) sau coloane specifice (cu un **flag** pentru globbing).
+- Poate fi combinat cu `WHERE`.
 
 ### UPDATE
-- Iterează toate intrările unui tabel.  
-- Dacă intrarea respectă condițiile, se face **pattern matching** pe numele câmpului din `SET` și valoarea se actualizează.  
+- Iterează toate intrările unui tabel.
+- Dacă intrarea respectă condițiile, se face **pattern matching** pe numele câmpului din `SET` și valoarea se actualizează.
 
 ### DELETE
-- Intrările care respectă condițiile sunt șterse:  
-  - memoria intrării e eliberată  
+- Intrările care respectă condițiile sunt șterse:
+  - memoria intrării e eliberată
   - vectorul este **shiftat la stânga**
-  - numărul de elemente se decrementează  
-  - vectorul e redimensionat cu `realloc` sau eliberat complet dacă devine gol  
+  - numărul de elemente se decrementează
+  - vectorul e redimensionat cu `realloc` sau eliberat complet dacă devine gol
 
-Ștergerile din `studenti` și `materii` afectează automat și tabela `inrolari`.  
+Ștergerile din `studenti` și `materii` afectează automat și tabela `inrolari`.
 
 ```c
 typedef enum {
@@ -164,36 +151,19 @@ void DELETE_FROM_inrolari_by_id(secretariat *secretariat, id_type type, int id);
 
 
 ## 🔐 Task 3: criptarea bazei de date
+- Am folosit `unsigned char` pentru a reprezenta valori hexadecimale.
+- **Serializarea** vectorului de studenți în octeți:
+  - dimensiunea unui student se calculează adunând dimensiunile câmpurilor (nu cu `sizeof(struct student)`)
+  - pentru fiecare student, copiez câmpurile în buffer cu `memcpy`,
+    iar poziția curentă se actualizează prin aritmetică pe pointeri (incrementare cu dimensiunea câmpului serializat)
+- Funcțiile `XOR` și `P_BOX` modifică datele in-place.
+- `P_BOX` copiază într-un buffer auxiliar, aplică permutarea și rescrie vectorul original.
 
-Pentru a proteja datele, vectorul de studenți este criptat cu o variantă simplificată de **CBC (Cipher Block Chaining)**.  
-
-Pașii algoritmului:  
-1. Transform vectorul de studenți într-o succesiune de octeți, stocată într-o variabilă `bytes_studenti`.  
-2. Aflu dimensiunea **padding-ului**.  
-3. Aflu dimensiunea totală a vectorului de octeți, cu tot cu padding `0x00`.  
-4. Împart vectorul în 4 blocuri de lungime egală (ultimul bloc completat cu `0x00` dacă e nevoie).  
-5. Criptez primul bloc:  
-    5.1. `XOR` între `block[0]` și `iv` (initialization vector).  
-    5.2. S-Box (`XOR`) cu cheia de criptare.  
-    5.3. P-Box (permutare) pe `block[0]`.  
-6. Criptez celelalte blocuri:  
-    6.1. `XOR` între `block[i]` și `block[i-1]`.  
-    6.2. S-Box (`XOR`) cu cheia.  
-    6.3. P-Box (permutare).  
-7. Blocurile rezultate sunt scrise byte cu byte în fișierul de ieșire.  
-
-Observații:  
-- Am folosit `unsigned char` pentru a reprezenta valori hexadecimale.  
-- `XOR` și `P_BOX` modifică datele in-place.  
-- `P_BOX` copiază într-un buffer auxiliar, aplică permutarea și rescrie vectorul original.  
-
-
----
 
 ## Practici de Coding Style
-- Am folosit funcții sigure (`snprintf`, `strncpy`) în locul lui `strcpy`.  
-- Gestionarea memoriei dinamice a fost făcută atent (alocare și eliberare la timp).  
-- Acoladele nu se deschid pe o linie nouă.  
+- Am folosit funcții sigure (`snprintf`, `strncpy`) în locul lui `strcpy`.
+- Gestionarea memoriei dinamice a fost făcută atent (alocare și eliberare la timp).
+- Acoladele nu se deschid pe o linie nouă.
 
 
 
@@ -206,10 +176,10 @@ Provocările principale pe care le-am întâmpinat:
 
 - Transformarea vectorului de studenți într-o secvență de octeți a fost mai complicată decât părea:
     nu am putut să folosesc direct `sizeof(struct student)`,
-    ci am calculat dimensiunea fiecărui câmp în bytes.  
+    ci am calculat dimensiunea fiecărui câmp în bytes.
 
-- **Precizia numerelor zecimale**  
+- **Precizia numerelor zecimale**
   Am învățat că pentru calculele de medii,
-  `double` oferă precizie mult mai bună decât `float`.  
+  `double` oferă precizie mult mai bună decât `float`.
 
 - Operațiile pe sirurile de caractere în C

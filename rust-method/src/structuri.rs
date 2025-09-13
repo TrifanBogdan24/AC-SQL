@@ -3,7 +3,7 @@ pub struct Student {
     pub id: usize,
     pub nume: String,
     pub an_studiu: u8,
-    pub statut: char,
+    pub statut: char,        // 'b' (buget) sau 't' (taxă)
     pub medie_generala: f32
 }
 
@@ -18,7 +18,7 @@ pub struct Materie {
 pub struct Inrolare {
     pub id_student: usize,
     pub id_materie: usize,
-    pub note: [f32; 3]
+    pub note: [f32; 3]       // Notele studentului (laborator, parțial, final)
 }
 
 #[derive(Debug, Default)]
