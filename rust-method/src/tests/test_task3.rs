@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use std::fs;
-use crate::structuri::Secretariat;
 use crate::task1::citeste_secretariat;
 use crate::task3::cripteaza_studenti;
 use rstest::rstest;
