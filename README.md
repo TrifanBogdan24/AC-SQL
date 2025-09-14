@@ -9,6 +9,12 @@ Practic, am vrut să văd cât de greu e să faci un "mini–Postgres" în C și
 
 Răspunsul meu: **greu**, dar extrem de fun.
 
+## Implementări multiple
+
+| Lang. | Directory |
+| :---: | :---: |
+| C     | [`C-method/`](./C-method/) |
+| Rust  | [`rust-method/`](./rust-method/) |
 
 ## 🗂 Structura bazei de date
 
@@ -58,6 +64,7 @@ Pașii algoritmului **CBC**:
    - 4.2. S-Box (`XOR`) cu cheia
    - 4.3. P-Box (permutare)
 6. Blocurile rezultate sunt scrise byte cu byte în fișierul de ieșire
+
 
 ## 💡 Ce am învățat
 
